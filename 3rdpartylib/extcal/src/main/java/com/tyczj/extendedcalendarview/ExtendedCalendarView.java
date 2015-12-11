@@ -1,6 +1,8 @@
 package com.tyczj.extendedcalendarview;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import android.annotation.SuppressLint;
@@ -34,7 +36,6 @@ public class ExtendedCalendarView extends RelativeLayout implements OnItemClickL
     private ImageView next, prev;
     private int gestureType = 0;
     private final GestureDetector calendarGesture = new GestureDetector(context, new GestureListener());
-
     public static final int NO_GESTURE = 0;
     public static final int LEFT_RIGHT_GESTURE = 1;
     public static final int UP_DOWN_GESTURE = 2;
@@ -301,7 +302,7 @@ public class ExtendedCalendarView extends RelativeLayout implements OnItemClickL
 
     /**
      * @param gestureType Allow swiping the calendar left/right or up/down to change the month.
-     *                    <p/>
+     *                    <p>
      *                    Default value no gesture
      */
     public void setGesture(int gestureType) {
@@ -310,5 +311,37 @@ public class ExtendedCalendarView extends RelativeLayout implements OnItemClickL
 
     public void setQuantity(final String value) {
         CalendarAdapter.setQuantity(value);
+    }
+
+    public void setRegistrationDate(final int value) {
+        CalendarAdapter.setRegistrationTime(value);
+    }
+
+    public void setTotalQuantity(final int totalQuantity) {
+        CalendarAdapter.totalData(totalQuantity);
+    }
+
+    public void quantityByDate(final ArrayList<DateQuantityModel> totalList) {
+        CalendarAdapter.quantityByDate(totalList);
+    }
+
+    public void customersList(final ArrayList<DateQuantityModel> totalList) {
+        CalendarAdapter.totalDataList(totalList);
+    }
+
+    public void setRegistrationYear(final int value) {
+        CalendarAdapter.setRegisteredYear(value);
+    }
+
+    public void setRegistrationMonth(final int value) {
+        CalendarAdapter.setRegisteredMonth(value);
+    }
+
+    public void setForCustomersDelivery(final boolean custDelivery) {
+        CalendarAdapter.isForCustomerDelivery(custDelivery);
+    }
+
+    public void customersMilkQuantity(ArrayList<DateQuantityModel> quantity) {
+        CalendarAdapter.customersMilkQuantity(quantity);
     }
 }

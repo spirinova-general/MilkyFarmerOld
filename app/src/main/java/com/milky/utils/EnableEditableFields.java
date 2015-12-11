@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 /**
@@ -13,16 +14,25 @@ public class EnableEditableFields implements View.OnTouchListener {
     private InputMethodManager inputMethodManager;
     private Context _context;
     private EditText _editableField;
+    private AutoCompleteTextView _autotext;
     private static boolean _enabled = false;
 
     public EnableEditableFields(final EditText view, final Context con, final InputMethodManager inptMngr) {
         this._context = con;
         this.inputMethodManager = inptMngr;
         this._editableField = view;
+        _autotext=null;
     }
-
+    public EnableEditableFields(final AutoCompleteTextView view, final Context con, final InputMethodManager inptMngr) {
+        this._context = con;
+        _editableField =null;
+        this.inputMethodManager = inptMngr;
+        this._autotext = view;
+    }
     public void blockDefaultKeys() {
-        inputMethodManager.hideSoftInputFromWindow(_editableField.getWindowToken(), 0);
+        if(_editableField==null)
+        inputMethodManager.hideSoftInputFromWindow(_autotext.getWindowToken(), 0);
+        else inputMethodManager.hideSoftInputFromWindow(_editableField.getWindowToken(), 0);
     }
 
     private void showKeyBoard() {

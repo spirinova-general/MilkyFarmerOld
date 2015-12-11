@@ -1,6 +1,7 @@
 package com.milky.utils;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 
 import com.milky.service.databaseutils.DatabaseHelper;
 
@@ -15,6 +16,7 @@ public class AppUtil extends Application {
     private static final String TAG = AppUtil.class.getSimpleName();
     private static AppUtil _instance;
     private DatabaseHelper _dbHandler;
+    private SharedPreferences _sharedPRefrences;
 
     @Override
     public void onCreate() {
@@ -22,6 +24,7 @@ public class AppUtil extends Application {
 
         _instance = this;
         _dbHandler = new DatabaseHelper(getApplicationContext());
+        _sharedPRefrences = getApplicationContext().getSharedPreferences(UserPrefrences.PREFRENCES, MODE_PRIVATE);
 
     }
 
@@ -34,5 +37,8 @@ public class AppUtil extends Application {
         return _dbHandler;
     }
 
+    public SharedPreferences getPrefrences() {
+        return _sharedPRefrences;
+    }
 
 }

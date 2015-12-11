@@ -10,24 +10,29 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.milky.R;
 import com.milky.service.databaseutils.AreaMapTableManagement;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.GlobalSettingTableManagement;
 import com.milky.service.databaseutils.TableNames;
+import com.milky.ui.adapters.AreaCityAdapter;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
 import com.milky.utils.EnableEditableFields;
-
-import com.milky.R;
 import com.milky.utils.TextValidationMessage;
+import com.milky.viewmodel.VAreaMapper;
 import com.milky.viewmodel.VCustomersList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -42,11 +47,18 @@ public class CustomerSettingFragment extends Fragment {
     private LinearLayout _mBottomLayout;
     private TextInputLayout _phone_textinput_layout;
     private AutoCompleteTextView _autocomplete_city_area;
+    private String selectedCityId = "", selectedAreaId = "";
     private TextInputLayout name_layout, last_name_layout, balance_layout, flat_number_layout, street_layout, milk_quantity_layout, rate_layout;
     private VCustomersList dataHolder;
     private DatabaseHelper _dbHelper;
+    private String itemName;
+    private String[] autoCompleteData;
+    private String[] mData;
+    private ArrayList<VAreaMapper> areaList, _areacityList = new ArrayList<>();
+
 
     //   private FormEditText et_phone;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -60,7 +72,6 @@ public class CustomerSettingFragment extends Fragment {
         * */
         initResources(view);
 
-
        /*
         * Set text field listeners*/
         _mAddress1.addTextChangedListener(new TextValidationMessage(flat_number_layout, getActivity(), false));
@@ -72,10 +83,6 @@ public class CustomerSettingFragment extends Fragment {
         _mMobile.addTextChangedListener(new TextValidationMessage(_phone_textinput_layout, getActivity(), true));
         _mAddress2.addTextChangedListener(new TextValidationMessage(street_layout, getActivity(), false));
         _mRate.addTextChangedListener(new TextValidationMessage(rate_layout, getActivity(), false));
-
-
-
-
 
         /* ---------------------------------------------------*/
 
@@ -152,12 +159,91 @@ public class CustomerSettingFragment extends Fragment {
         _mAddress2.setText(getActivity().getIntent().getStringExtra("address2"));
         _mAddress1.setText(getActivity().getIntent().getStringExtra("address1"));
         _mRate.setText(getActivity().getIntent().getStringExtra("defaultrate"));
-        _autocomplete_city_area.setText(AreaMapTableManagement.getAreaNameById(_dbHelper.getReadableDatabase(),
-                getActivity().getIntent().getStringExtra("areaId")) + ", " +
-                AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(),
-                        getActivity().getIntent().getStringExtra("cityId")));
+        _autocomplete_city_area.setText(AreaMapTableManagement.getAreaNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("areaId")) + " " + AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("cityId")));
+        areaList = AreaMapTableManagement.getAreaById(_dbHelper.getReadableDatabase(), Constants.ACCOUNT_ID);
+        autoCompleteData = new String[areaList.size()];
+//        for (int i = 0; i < areaList.size(); i++) {
+//            // Get City for area
+//            // autoCompleteData[i] = AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), _areaList.get(i).getArea()) + " " + _areaList.get(i).getCity();
+//            autoCompleteData[i] = areaList.get(i).getArea()+" "+AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(),areaList.get(i).getCityId());
+//        }
+        /*adapter1 = new AreaCityAdapter(getActivity(), android.R.layout.simple_dropdown_item_1line, R.id.te1, areaList);
+        _autocomplete_city_area.setAdapter(adapter1);*/
+        for (int i = 0; i < areaList.size(); i++) {
+            VAreaMapper areacity = new VAreaMapper();
+            areacity.setArea(areaList.get(i).getArea());
+            areacity.setAreaId(areaList.get(i).getAreaId());
+            areacity.setCityId(areaList.get(i).getCityId());
+            areacity.setCity(AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), areaList.get(i).getCityId()));
+            areacity.setCityArea(areacity.getArea() + areacity.getCity());
+            _areacityList.add(areacity);
 
 
+        }
+
+        AreaCityAdapter adapter1 = new AreaCityAdapter(getActivity(), 0, R.id.te1, _areacityList);
+        _autocomplete_city_area.setAdapter(adapter1);
+
+        // final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, autoCompleteData);
+
+     /*   _autocomplete_city_area.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+                // TODO Auto-generated method stub
+                adapter1.getFilter().filter(arg0);
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                          int arg3) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable arg0) {
+                // TODO Auto-generated method stub
+
+            }
+        });*/
+
+/*
+/*        String data = areaList.getItem(position).split(" ");*//*
+        int index = Arrays.asList(mData).indexOf(data);*/
+        //  _autocomplete_city_area.setAdapter(adapter);
+        //setting the adapter data into the AutoCompleteTextView
+        selectedAreaId = getActivity().getIntent().getStringExtra("areaId");
+        selectedCityId = getActivity().getIntent().getStringExtra("cityId");
+
+        _autocomplete_city_area.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                _autocomplete_city_area.setText(_areacityList.get(position).getArea() + ", " + _areacityList.get(position).getCity());
+                selectedAreaId = _areacityList.get(position).getAreaId();
+                selectedCityId = _areacityList.get(position).getCityId();
+                // int selection = parent.getSelectedItemPosition();
+
+             /*   for (int i = 0; i < areaList.size(); i++) {
+                    if (areaList.get(i).getArea().equals(_autocomplete_city_area.getText().toString())) {
+                     //int index = areaList.indexOf(_autocomplete_city_area.getText().toString());
+                        selectedAreaId = areaList.get(i).getAreaId();
+                        selectedCityId = areaList.get(i).getCityId();
+                    }
+                    else{
+                        Toast.makeText(getActivity(),"Sorry i cant find it",Toast.LENGTH_SHORT).show();
+                    }
+                }*/
+              /*  for(int i=0; i < areaList.size(); i++)
+                    if(areaList[i].contains(_autocomplete_city_area.getText().toString()))
+                        aPosition = i;*/
+                // Toast.makeText(getActivity(),"area is"+_autocomplete_city_area.getText().toString(),Toast.LENGTH_SHORT).show();
+                /*if(index>=0) {
+                    selectedAreaId = areaList.get(index).getAreaId();
+                    selectedCityId = areaList.get(index).getCityId();
+                    }*/
+            }
+        });
         disableKeyBoard();
 
         _mCancel.setOnClickListener(new View.OnClickListener() {
@@ -165,6 +251,7 @@ public class CustomerSettingFragment extends Fragment {
             public void onClick(View v) {
                 //disable edit mode
                 EnableEditableFields.setIsEnabled(false);
+                disableKeyBoard();
                 _mEdit.setVisibility(View.VISIBLE);
                 _mBottomLayout.setVisibility(View.GONE);
 
@@ -177,8 +264,9 @@ public class CustomerSettingFragment extends Fragment {
                 _mQuantuty.clearFocus();
                 _mMobile.clearFocus();
                 _mAddress1.clearFocus();
+                _mRate.clearFocus();
+                _autocomplete_city_area.clearFocus();
                 _mAddress2.clearFocus();
-
 
             }
         });
@@ -190,6 +278,7 @@ public class CustomerSettingFragment extends Fragment {
                 inputMethodManager.showSoftInput(_mFirstName, InputMethodManager.SHOW_IMPLICIT);
                 _mBottomLayout.setVisibility(View.VISIBLE);
                 _mEdit.setVisibility(View.GONE);
+                _autocomplete_city_area.setEnabled(true);
                 _mFirstName.setSelection(_mFirstName.getText().length());
                 EnableEditableFields.setIsEnabled(true);
             }
@@ -200,7 +289,17 @@ public class CustomerSettingFragment extends Fragment {
         _mSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TextValidationMessage.getIfValid()) {
+                if (!_mFirstName.getText().toString().equals("")
+                        && !_mLastName.getText().toString().equals("") &&
+                        !_mBalance.getText().toString().equals("") &&
+                        !_mAddress1.getText().toString().equals("")
+                        && !_mRate.getText().toString().equals("")
+                        && !_mAddress2.getText().toString().equals("")
+                        && !selectedCityId.equals("") && !selectedAreaId.equals("")
+                        && !_mMobile.getText().toString().equals("") &&
+                        !_mQuantuty.getText().toString().equals("")
+                ) {
+
 
                     VCustomersList holder = new VCustomersList();
                     holder.setFirstName(_mFirstName.getText().toString());
@@ -208,8 +307,8 @@ public class CustomerSettingFragment extends Fragment {
                     holder.setBalance_amount(_mBalance.getText().toString());
                     holder.setAddress1(_mAddress1.getText().toString());
                     holder.setAddress2(_mAddress2.getText().toString());
-                    holder.setCityId(getActivity().getIntent().getStringExtra("cityId"));
-                    holder.setAreaId(getActivity().getIntent().getStringExtra("areaId"));
+                    holder.setCityId(selectedCityId);
+                    holder.setAreaId(selectedAreaId);
                     holder.setMobile(_mMobile.getText().toString());
                     holder.setQuantity(_mQuantuty.getText().toString());
                     holder.setAccountId(Constants.ACCOUNT_ID);
@@ -219,6 +318,7 @@ public class CustomerSettingFragment extends Fragment {
                     holder.setCustomerId(Constants.ACCOUNT_ID + String.valueOf(System.currentTimeMillis()));
                     CustomersTableMagagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), holder, getActivity().getIntent().getStringExtra("cust_id"));
                     Toast.makeText(getActivity(), "Customer edited successfully !", Toast.LENGTH_SHORT).show();
+                    EnableEditableFields.setIsEnabled(false);
                     getActivity().finish();
 
                 } else {
@@ -235,9 +335,11 @@ public class CustomerSettingFragment extends Fragment {
 
     private void disableKeyBoard() {
         //Block default keyboard
+
         new EnableEditableFields(_mFirstName, getActivity(), inputMethodManager).blockDefaultKeys();
         new EnableEditableFields(_mLastName, getActivity(), inputMethodManager).blockDefaultKeys();
-
+        // _autocomplete_city_area.setEnabled(false);
+        new EnableEditableFields(_mRate, getActivity(), inputMethodManager).blockDefaultKeys();
         new EnableEditableFields(_mQuantuty, getActivity(), inputMethodManager).blockDefaultKeys();
         new EnableEditableFields(_mBalance, getActivity(), inputMethodManager).blockDefaultKeys();
         new EnableEditableFields(_mMobile, getActivity(), inputMethodManager).blockDefaultKeys();

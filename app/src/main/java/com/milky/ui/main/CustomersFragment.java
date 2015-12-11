@@ -12,7 +12,9 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.milky.R;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.TableNames;
@@ -22,8 +24,6 @@ import com.milky.utils.AppUtil;
 import com.milky.viewmodel.VCustomersList;
 
 import java.util.List;
-
-import com.milky.R;
 
 /**
  * Created by Neha on 11/17/2015.
@@ -47,14 +47,13 @@ public class CustomersFragment extends Fragment {
             _mAdapter = new CustomersFragmentListAdapter(getActivity(), _mCustomersList);
             recList.setAdapter(_mAdapter);
         } else
-            mTotalCustomers.setText(String.valueOf("0" + " " + "Customers "));
+            mTotalCustomers.setText(String.valueOf("No customer added yet !"));
 
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.customers_fragment_layout, null);
         initResources(view);
         return view;
@@ -75,8 +74,14 @@ public class CustomersFragment extends Fragment {
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), CustomerAddActivity.class).putExtra("istoAddCustomer", true);
-                startActivity(intent);
+                //check if global setting has been set
+                if (!AppUtil.getInstance().getDatabaseHandler().isTableNotEmpty(TableNames.TABLE_GLOBAL_SETTINGS)) {
+                    MainActivity.mDrawerLayout.openDrawer(MainActivity.mNavigationView);
+                    Toast.makeText(getActivity(), getResources().getString(R.string.set_global_rate), Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(getActivity(), CustomerAddActivity.class).putExtra("istoAddCustomer", true);
+                    startActivity(intent);
+                }
             }
         });
 

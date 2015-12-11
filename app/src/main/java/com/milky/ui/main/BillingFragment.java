@@ -43,12 +43,12 @@ public class BillingFragment extends Fragment {
         _dbHelper = AppUtil.getInstance().getDatabaseHandler();
         TextView _mTotalBills = (TextView) v.findViewById(R.id.total_pending_bills);
         if (_dbHelper.isTableNotEmpty(TableNames.TABLE_CUSTOMER)) {
-            _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
-            _mAdapter = new CustomersListAdapter(_mCustomersList, getActivity(), false);
-            _mListView.setAdapter(_mAdapter);
+            //  _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
+//            _mAdapter = new CustomersListAdapter(_mCustomersList, getActivity(), false);
+//            _mListView.setAdapter(_mAdapter);
         }
 
-        _mTotalBills.setVisibility(View.VISIBLE);
+//        _mTotalBills.setVisibility(View.VISIBLE);
 
 
     }

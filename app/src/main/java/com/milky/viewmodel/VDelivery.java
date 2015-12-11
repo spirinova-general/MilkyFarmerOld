@@ -9,15 +9,31 @@ public class VDelivery {
     private String customerId;
     private String deliveryDate;
     private String quantity;
-    private String startDate;
     private String dateModified;
+    private String day, month, year;
 
-    public String getStartDate() {
-        return startDate;
+    public String getDay() {
+        return day;
     }
 
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
+    public void setDay(String day) {
+        this.day = day;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
     }
 
     public String getDateModified() {

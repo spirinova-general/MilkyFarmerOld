@@ -29,7 +29,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(TableColumsDetail.CUSTOMER_SETTINGS);
         db.execSQL(TableColumsDetail.DELIVERY);
         db.execSQL(TableColumsDetail.GLOBAL_SETTINGS);
-        db.execSQL(TableColumsDetail.CUSTOMER_MILK_CONSUMPTION);
 
     }
 

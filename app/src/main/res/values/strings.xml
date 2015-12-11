@@ -15,11 +15,12 @@
     <string name="title_activity_sign_up">SignUp</string>
     <string name="err_tel">err_tel</string>
     <string name="global_setting">Global Settings</string>
-    <string name="field_cant_empty">This cannot be empty</string>
+    <string name="field_cant_empty">This field cannot be empty</string>
     <string name="invalid_phone_no">Invalid phone number</string>
     <string name="fill_require_fields">Please fill the required fields</string>
     <string name="data_saved_successfully">Data saved successfully !</string>
     <string name="select_area">Select Area</string>
     <string name="select_city">Select City</string>
+    <string name="set_global_rate">Please setup settings first</string>
 </resources>
 

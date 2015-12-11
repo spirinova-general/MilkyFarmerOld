@@ -1,13 +1,16 @@
 package com.tyczj.extendedcalendarview;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
+import android.os.Build;
 import android.text.format.Time;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +27,7 @@ public class CalendarAdapter extends BaseAdapter {
     Context context;
     Calendar cal;
     public String[] days;
+
 //	OnAddNewEventClick mAddEvent;
 
     ArrayList<Day> dayList = new ArrayList<Day>();
@@ -95,23 +99,40 @@ public class CalendarAdapter extends BaseAdapter {
         } else {
 
             v = vi.inflate(R.layout.day_view, null);
-            FrameLayout today = (FrameLayout) v.findViewById(R.id.today_frame);
-            Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault());
-            Day d = dayList.get(position);
-            if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() == cal.get(Calendar.MONTH) && d.getDay() == cal.get(Calendar.DAY_OF_MONTH)) {
-                today.setVisibility(View.VISIBLE);
-            }
-            else if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() == cal.get(Calendar.MONTH) && d.getDay() < cal.get(Calendar.DAY_OF_MONTH)) {
-                today.setBackground(context.getResources().getDrawable(R.drawable.past_days));
-                today.setVisibility(View.VISIBLE);
-            }else {
-
-                today.setVisibility(View.GONE);
-            }
-
             TextView dayTV = (TextView) v.findViewById(R.id.textView1);
             TextView quantitiTV = (TextView) v.findViewById(R.id.milk_quantity);
-            quantitiTV.setText(quantityText);
+            FrameLayout today = (FrameLayout) v.findViewById(R.id.today_frame);
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault());
+            int month = cal.get(Calendar.DAY_OF_MONTH);
+            Day d = dayList.get(position);
+
+            if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() == cal.get(Calendar.MONTH) && d.getDay() == cal.get(Calendar.DAY_OF_MONTH)) {
+                today.setVisibility(View.VISIBLE);
+                quantitiTV.setText(String.valueOf(getQuantity(d)) + "L");
+
+
+            } else if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() == cal.get(Calendar.MONTH) && d.getDay() < cal.get(Calendar.DAY_OF_MONTH)
+                    && d.getDay() >= registrationDate) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    today.setBackground(context.getResources().getDrawable(R.drawable.past_days));
+                }
+                quantitiTV.setText(String.valueOf(getQuantity(d)) + "L");
+
+                today.setVisibility(View.VISIBLE);
+            } else if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() == cal.get(Calendar.MONTH) && d.getDay() < cal.get(Calendar.DAY_OF_MONTH)
+                    && d.getDay() < registrationDate) {
+                today.setVisibility(View.GONE);
+                quantitiTV.setText("");
+            } else if (d.getYear() == cal.get(Calendar.YEAR) && d.getMonth() < cal.get(Calendar.MONTH)) {
+                quantitiTV.setText("");
+                today.setVisibility(View.GONE);
+            } else if (d.getYear() < cal.get(Calendar.YEAR)) {
+                quantitiTV.setText("");
+                today.setVisibility(View.GONE);
+            } else {
+                quantitiTV.setText(String.valueOf(getQuantity(d)) + "L");
+                today.setVisibility(View.GONE);
+            }
 
             RelativeLayout rl = (RelativeLayout) v.findViewById(R.id.rl);
             ImageView iv = (ImageView) v.findViewById(R.id.imageView1);
@@ -247,9 +268,125 @@ public class CalendarAdapter extends BaseAdapter {
 //		public abstract void onAddNewEventClick();
 //	}
     private static String quantityText;
+    private static int registrationDate = 0, registeredMonth = 0, registeredYear = 0;
 
     public static void setQuantity(final String value) {
         quantityText = value;
     }
 
+    public static void setRegistrationTime(final int value) {
+        registrationDate = value;
+    }
+
+    static int totalQuantity;
+    static boolean isForCustomers = false;
+    static ArrayList<DateQuantityModel> quantityByDateList, totalData;
+
+    public static void totalData(final int totalList) {
+        totalQuantity = totalList;
+    }
+
+    public static void quantityByDate(final ArrayList<DateQuantityModel> totalList) {
+        quantityByDateList = totalList;
+    }
+
+    public static void totalDataList(final ArrayList<DateQuantityModel> totalList) {
+        totalData = totalList;
+    }
+
+    public static void isForCustomerDelivery(final boolean customer_delivery) {
+        isForCustomers = customer_delivery;
+    }
+
+    public static void setRegisteredMonth(final int month) {
+        registeredMonth = month;
+    }
+
+    static ArrayList<DateQuantityModel> customerMillkQuantity;
+
+    public static void customersMilkQuantity(ArrayList<DateQuantityModel> list) {
+        customerMillkQuantity = list;
+    }
+
+    public static void setRegisteredYear(final int year) {
+        registeredYear = year;
+    }
+
+    ArrayList<String> array;
+    List<Day> day = new ArrayList<>();
+
+    private int getQuantity(Day d) {
+        int quantity = 0;
+        int position = 0;
+        array = new ArrayList<>();
+        List<String> custId = new ArrayList<>();
+        if (!isForCustomers) {
+            // if calendar date matches with delivery table data
+            //if delivery table data is not empty get data from delivery
+
+            if (quantityByDateList != null) {
+                for (int i = 0; i < quantityByDateList.size(); i++) {
+                    // Date matches
+                    if (d.getDay() == Integer.parseInt(quantityByDateList.get(i).getDay())
+                            && d.getMonth() == Integer.parseInt(quantityByDateList.get(i).getMonth())
+                            && d.getYear() == Integer.parseInt(quantityByDateList.get(i).getYear())) {
+                        quantity = Integer.parseInt(quantityByDateList.get(i).getQuantity()) + quantity;
+                        custId.add(quantityByDateList.get(i).getCustomerId());
+                        day.add(d);
+
+                    } else {
+                        for (int x = 0; x < totalData.size(); x++) {
+                            if (custId.size() > 0) {
+
+                                if (!custId.contains(totalData.get(x).getCustomerId()))
+                                    quantity = Integer.parseInt(totalData.get(x).getQuantity()) + quantity;
+                            } else {
+
+                                quantity = Integer.parseInt(totalData.get(x).getQuantity()) + quantity;
+                            }
+
+
+                        }
+                        return quantity;
+                    }
+                }
+            } else {
+                if (totalData != null)
+                    for (int i = 0; i < totalData.size(); i++) {
+                        quantity = Integer.parseInt(totalData.get(i).getQuantity()) + quantity;
+                    }
+                else {
+                    quantity = 0;
+                }
+            }
+
+            return quantity;
+
+        } else {
+
+            // Show quantity for customer only
+
+            if (customerMillkQuantity != null && customerMillkQuantity.size()>0) {
+
+                for (int i = 0; i < customerMillkQuantity.size(); i++) {
+                    // Date matches
+                    if (d.getDay() == Integer.parseInt(customerMillkQuantity.get(i).getDay())
+                            && d.getMonth() == Integer.parseInt(customerMillkQuantity.get(i).getMonth())
+                            && d.getYear() == Integer.parseInt(customerMillkQuantity.get(i).getYear())) {
+                        quantity = Integer.parseInt(customerMillkQuantity.get(i).getQuantity());
+
+
+                    } else {
+                        quantity = totalQuantity;
+                    }
+                }
+
+            }
+            else {
+                quantity = totalQuantity;
+            }
+            return quantity;
+
+        }
+    }
 }

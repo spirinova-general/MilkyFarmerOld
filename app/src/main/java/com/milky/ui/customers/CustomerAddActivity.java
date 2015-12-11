@@ -7,8 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,19 +14,21 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.milky.R;
 import com.milky.service.databaseutils.AreaMapTableManagement;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.GlobalSettingTableManagement;
 import com.milky.service.databaseutils.TableNames;
-import com.milky.ui.main.GlobalSetting;
+import com.milky.ui.adapters.AreaCityAdapter;
+import com.milky.ui.adapters.AutocompleteAreaArrayAdapter;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
 import com.milky.utils.TextValidationMessage;
@@ -39,9 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import com.milky.R;
-
-public class CustomerAddActivity extends AppCompatActivity implements TextWatcher {
+public class CustomerAddActivity extends AppCompatActivity {
     private Toolbar _mToolbar;
     private EditText _firstName;
 
@@ -61,11 +59,12 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
     private AutoCompleteTextView _cityAreaAutocomplete;
     private DatabaseHelper _dbHelper;
     private TextInputLayout name_layout, rate_layout, balance_layout, autocomplete_layout, last_name_layout, flat_number_layout, street_layout, milk_quantity_layout, _phone_textinput_layout;
-    private String selectedCityId ="", selectedAreaId="";
-    private ArrayList<VAreaMapper> _areaList;
+    private String selectedCityId = "", selectedAreaId = "";
+    private ArrayList<VAreaMapper> _areaList, _areacityList = new ArrayList<>();
     private String[] autoCompleteData;
     private Calendar c;
-
+    private AreaCityAdapter adapter1;
+    private AutocompleteAreaArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +87,6 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
         _lastName.addTextChangedListener(new TextValidationMessage(last_name_layout, this, false));
         _cityAreaAutocomplete.addTextChangedListener(new TextValidationMessage(autocomplete_layout, this, false));
         _rate.addTextChangedListener(new TextValidationMessage(rate_layout, this, false));
-
 
     }
 
@@ -170,22 +168,52 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
         flat_number_layout = (TextInputLayout) findViewById(R.id.flat_number_layout);
         autocomplete_layout = (TextInputLayout) findViewById(R.id.autocomplete_layout);
         milk_quantity_layout = (TextInputLayout) findViewById(R.id.milk_quantity_layout);
-        _cityAreaAutocomplete.addTextChangedListener(this);
         _areaList = AreaMapTableManagement.getAreaById(_dbHelper.getReadableDatabase(), Constants.ACCOUNT_ID);
         autoCompleteData = new String[_areaList.size()];
         for (int i = 0; i < _areaList.size(); i++) {
-            // Get City for area
-            autoCompleteData[i] = AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), _areaList.get(i).getCityId()) + "," + _areaList.get(i).getArea();
+            VAreaMapper areacity = new VAreaMapper();
+            areacity.setArea(_areaList.get(i).getArea());
+            areacity.setAreaId(_areaList.get(i).getAreaId());
+            areacity.setCityId(_areaList.get(i).getCityId());
+            areacity.setCity(AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), _areaList.get(i).getCityId()));
+            areacity.setCityArea(areacity.getArea() + areacity.getCity());
+            _areacityList.add(areacity);
+
+
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, autoCompleteData);
-        _cityAreaAutocomplete.setThreshold(2);//will start working from first character
-        _cityAreaAutocomplete.setAdapter(adapter);//setting the adapter data into the AutoCompleteTextView
+        //  final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, autoCompleteData);
+        _cityAreaAutocomplete.setThreshold(1);//will start working from first character
+       /* _cityAreaAutocomplete.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+                // TODO Auto-generated method stub
+                adapter.getFilter().filter(arg0);
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                          int arg3) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable arg0) {
+                // TODO Auto-generated method stub
+
+            }
+        });*/
+        AreaCityAdapter adapter1 = new AreaCityAdapter(this, 0, R.id.te1, _areacityList);
+        _cityAreaAutocomplete.setAdapter(adapter1);
+        //_cityAreaAutocomplete.setAdapter(adapter);//setting the adapter data into the AutoCompleteTextView
 
         _cityAreaAutocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectedAreaId = _areaList.get(position).getAreaId();
-                selectedCityId = _areaList.get(position).getCityId();
+                _cityAreaAutocomplete.setText(_areacityList.get(position).getArea() + ", " + _areacityList.get(position).getCity());
+                selectedAreaId = _areacityList.get(position).getAreaId();
+                selectedCityId = _areacityList.get(position).getCityId();
             }
         });
 
@@ -209,9 +237,9 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
                             !_mBalance.getText().toString().equals("") &&
                             !_mAddress1.getText().toString().equals("")
                             && !_address2.getText().toString().equals("")
-                            && !selectedCityId.equals("") || !selectedAreaId.equals("")
+                            && !selectedCityId.equals("") && !selectedAreaId.equals("")
                             && !_mPhone.getText().toString().equals("") &&
-                            !_mQuantuty.getText().toString().equals("")
+                            !_mQuantuty.getText().toString().equals("") && !_rate.getText().toString().equals("")
                     )) {
                         VCustomersList holder = new VCustomersList();
                         holder.setFirstName(_firstName.getText().toString());
@@ -224,13 +252,15 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
                         holder.setMobile(_mPhone.getText().toString());
                         holder.setQuantity(_mQuantuty.getText().toString());
                         holder.setAccountId(Constants.ACCOUNT_ID);
+                        holder.setRate(_rate.getText().toString());
                         holder.setDateAdded(formattedDate);
                         holder.setCustomerId(Constants.ACCOUNT_ID + String.valueOf(System.currentTimeMillis()));
                         CustomersTableMagagement.insertCustomerDetail(_dbHelper.getWritableDatabase(), holder);
                         CustomerAddActivity.this.finish();
 
                     } else {
-                        snackbar.show();
+                        // snackbar.show();
+                        Toast.makeText(CustomerAddActivity.this, getResources().getString(R.string.fill_require_fields), Toast.LENGTH_SHORT).show();
                     }
                 } catch (NullPointerException npe) {
                     snackbar.show();
@@ -255,21 +285,6 @@ public class CustomerAddActivity extends AppCompatActivity implements TextWatche
     protected void onDestroy() {
         super.onDestroy();
 
-
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-    }
-
-    @Override
-    public void afterTextChanged(Editable s) {
 
     }
 

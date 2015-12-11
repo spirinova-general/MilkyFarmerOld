@@ -11,6 +11,5 @@ public class TableNames {
     public static final String TABLE_CUSTOMER_SETTINGS = "customer_settings";
     public static final String TABLE_DELIVERY = "delivery";
     public static final String TABLE_GLOBAL_SETTINGS = "global_settings";
-    public static final String TABLE_CONSUMED_QUANTITY = "consumed_milk_quantity";
-
+    public static final String TABLE_AREAACCOUNT_MAPPING = "area_account_mapping";
 }

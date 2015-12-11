@@ -36,8 +36,12 @@ public class TableColumns {
     public static final String DEFAULT_RATE = "default_rate";
 
     public static final String CITY_NAME = "city";
-    public static final String DATE_QUANTITY_MODIFIED="quantity_modified_date";
-
+    public static final String DATE_QUANTITY_MODIFIED = "quantity_modified_date";
+    public static final String DAY = "day";
+    public static final String MONTH = "month";
+    public static final String YEAR = "year";
+    public static final String IS_QUANTITY_UPDATED = "is_quantity_updated";
+    public static final String ISDELETED = "isdeleted";
 
 }
 

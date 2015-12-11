@@ -14,19 +14,22 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.milky.service.databaseutils.ConsumptionCustomersTableManagement;
+import com.milky.R;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
+import com.milky.service.databaseutils.DeliveryTableManagement;
 import com.milky.service.databaseutils.TableNames;
 import com.milky.ui.adapters.GlobalDeliveryAdapter;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
 import com.milky.viewmodel.VCustomersList;
+import com.milky.viewmodel.VDelivery;
 
 import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
-
-import com.milky.R;
 
 public class CustomersList extends AppCompatActivity {
     private ListView _mCustomers;
@@ -34,18 +37,17 @@ public class CustomersList extends AppCompatActivity {
     private String _mMonth;
     private Intent _mIntent;
     private Toolbar _mToolbar;
-    public static List<VCustomersList> _mCustomersList;
     private GlobalDeliveryAdapter _mAdaapter;
     private Button _save, _cancel;
     private DatabaseHelper _dbHelper;
     private LinearLayout _bottomLayout;
+    public static List<VCustomersList> _mCustomersList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_customers_list);
         initResources();
-
     }
 
     private void initResources() {
@@ -67,6 +69,8 @@ public class CustomersList extends AppCompatActivity {
         }
         if ((_mCustomersList == null || _mCustomersList.size() == 0))
             _bottomLayout.setVisibility(View.GONE);
+        else
+            _bottomLayout.setVisibility(View.VISIBLE);
         _dbHelper.close();
 
     }
@@ -109,16 +113,22 @@ public class CustomersList extends AppCompatActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.save:
-
-                for (int i = 0; i < _mCustomersList.size(); i++) {
-//                    CustomersTableMagagement.updateQuantity(_dbHelper.getWritableDatabase(), _mCustomersList.get(i));
-                    if (ConsumptionCustomersTableManagement.isHasData(Constants.QUANTITY_UPDATED_DATE, _dbHelper.getReadableDatabase(),_mCustomersList.get(i).getCustomerId()))
-                        ConsumptionCustomersTableManagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), _mCustomersList.get(i));
-                    else
-                        ConsumptionCustomersTableManagement.insertCustomerDetail(_dbHelper.getWritableDatabase(), _mCustomersList.get(i));
-                }
+                if (_mCustomersList.size() > 0)
+                    for (int i = 0; i < _mCustomersList.size(); i++) {
+                        VCustomersList list = new VCustomersList();
+                        list.setDeliverydate(Constants.DELIVERY_DATE);
+                        list.setQuantity(_mCustomersList.get(i).getQuantity());
+                        list.setDay(Constants.QUANTITY_UPDATED_DAY);
+                        list.setMonth(Constants.QUANTITY_UPDATED_MONTH);
+                        list.setYear(Constants.QUANTITY_UPDATED_YEAR);
+                        list.setCustomerId(_mCustomersList.get(i).getCustomerId());
+                        if (DeliveryTableManagement.isHasData(_dbHelper.getReadableDatabase(),
+                                list.getCustomerId(), list.getDeliverydate()))
+                            DeliveryTableManagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), list);
+                        else
+                            DeliveryTableManagement.insertCustomerDetail(_dbHelper.getWritableDatabase(), list);
+                    }
                 finish();
-
                 break;
 
             case R.id.cancel:

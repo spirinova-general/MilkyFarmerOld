@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.milky.R;
-import com.milky.service.databaseutils.AreaMapTableManagement;
+import com.milky.service.databaseutils.AreaCityTableManagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.utils.AppUtil;
 import com.milky.viewmodel.VCustomersList;
@@ -49,9 +49,9 @@ public class CustomersFragmentListAdapter extends RecyclerView.Adapter<Customers
         holder.userFirstName.setText(customer.getFirstName());
         holder.userLastName.setText(customer.getLastName());
         holder.userFlatNo.setText("#" + customer.getAddress1() + ", ");
-        holder.userAreaName.setText(AreaMapTableManagement.getAreaNameById(_dbhelper.getReadableDatabase(), customer.getAreaId()) + ", ");
+        holder.userAreaName.setText(AreaCityTableManagement.getAreaNameById(_dbhelper.getReadableDatabase(), customer.getAreaId()) + ", ");
         holder.userStreet.setText(customer.getAddress2() + ", ");
-        holder.userCity.setText(AreaMapTableManagement.getCityNameById(_dbhelper.getReadableDatabase(), customer.getCityId()));
+        holder.userCity.setText(AreaCityTableManagement.getCityNameById(_dbhelper.getReadableDatabase(), customer.getCityId()));
 
     }
 

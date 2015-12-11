@@ -24,6 +24,52 @@ public class VCustomersList {
     private String rate;
     private String tax;
     private String quantityModifiedDate;
+    private String day, month, year, deliverydate;
+
+
+    public String getIs_deleted() {
+
+        return is_deleted;
+    }
+
+    public String getDeliverydate() {
+        return deliverydate;
+    }
+
+    public void setDeliverydate(String deliverydate) {
+        this.deliverydate = deliverydate;
+    }
+
+
+    public void setIs_deleted(String is_deleted) {
+        this.is_deleted = is_deleted;
+    }
+
+    private String is_deleted;
+
+    public String getDay() {
+        return day;
+    }
+
+    public void setDay(String day) {
+        this.day = day;
+    }
+
+    public String getMonth() {
+        return month;
+    }
+
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    public String getYear() {
+        return year;
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
 
     public String getQuantityModifiedDate() {
         return quantityModifiedDate;

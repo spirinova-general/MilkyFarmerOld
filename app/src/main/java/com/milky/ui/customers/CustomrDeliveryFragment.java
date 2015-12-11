@@ -13,6 +13,10 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.milky.service.databaseutils.CustomersTableMagagement;
+import com.milky.service.databaseutils.DeliveryTableManagement;
+import com.milky.utils.AppUtil;
+import com.milky.utils.Constants;
 import com.tyczj.extendedcalendarview.Day;
 import com.tyczj.extendedcalendarview.ExtendedCalendarView;
 
@@ -30,6 +34,12 @@ public class CustomrDeliveryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.calender_layout, container, false);
         _mCalenderView = (ExtendedCalendarView) view.findViewById(R.id.calendar);
+        _mCalenderView.setTotalQuantity(CustomersTableMagagement.getTotalMilkQuantytyForCustomer(AppUtil.getInstance().getDatabaseHandler().getReadableDatabase(),
+                getActivity().getIntent().getStringExtra("cust_id")));
+        _mCalenderView.customersMilkQuantity(DeliveryTableManagement.gwtMilkQuantityofCustomer(AppUtil.getInstance().getDatabaseHandler().getReadableDatabase(),
+                getActivity().getIntent().getStringExtra("cust_id")));
+        _mCalenderView.setForCustomersDelivery(true);
+
         initResources();
         return view;
 
@@ -40,7 +50,13 @@ public class CustomrDeliveryFragment extends Fragment {
         _mCalenderView.setOnDayClickListener(new ExtendedCalendarView.OnDayClickListener() {
             @Override
             public void onDayClicked(AdapterView<?> adapterView, View view, int i, long l, Day day) {
-                onCreateDialog("2L");
+                Constants.SELECTED_DAY = day;
+                Constants.QUANTITY_UPDATED_DAY = String.valueOf(day.getDay());
+                Constants.QUANTITY_UPDATED_MONTH = String.valueOf(day.getMonth());
+                Constants.QUANTITY_UPDATED_YEAR = String.valueOf(day.getYear());
+                Constants.DELIVERY_DATE = String.valueOf(day.getDay()) + "-" + String.valueOf(day.getMonth()) + "-" + String.valueOf(day.getYear());
+                String balance = CustomersTableMagagement.getBalanceForCustomer(AppUtil.getInstance().getDatabaseHandler().getReadableDatabase(), getActivity().getIntent().getStringExtra("cust_id"));
+                onCreateDialog(balance);
 //                String month = new DateFormatSymbols().getMonths()[day.getMonth()];
 //                Intent intent = new Intent(getActivity(), CustomersList.class).putExtra("day", day.getDay()).putExtra("month", month);
 //                startActivity(intent);
@@ -59,7 +75,7 @@ public class CustomrDeliveryFragment extends Fragment {
 
         // set the custom dialog components
         final EditText billamount = (EditText) dialog.findViewById(R.id.bill_amount);
-        bill_amount_layout=(TextInputLayout)dialog.findViewById(R.id.bill_amount_layout);
+        bill_amount_layout = (TextInputLayout) dialog.findViewById(R.id.bill_amount_layout);
         billamount.setText(stringData);
         Button ok = (Button) dialog.findViewById(R.id.ok);
         Button cancel = (Button) dialog.findViewById(R.id.cancel);

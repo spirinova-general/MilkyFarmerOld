@@ -14,16 +14,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.milky.service.databaseutils.CustomersTableMagagement;
-import com.milky.service.databaseutils.TableNames;
-import com.milky.ui.customers.CustomerTabFragment;
-import com.milky.ui.customers.CustomersList;
-import com.milky.ui.main.CustomersFragment;
 import com.milky.R;
+import com.milky.service.databaseutils.CustomersTableMagagement;
+import com.milky.ui.customers.CustomerTabFragment;
 import com.milky.utils.AppUtil;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 /**
  * Created by Neha on 11/19/2015.
@@ -35,6 +29,14 @@ public class CustomersActivity extends AppCompatActivity {
 
     private boolean _mIsToAddCustomer = false;
     public static Intent _mIntent;
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFragmentManager = getSupportFragmentManager();
+        mFragmentTransaction = mFragmentManager.beginTransaction();
+        mFragmentTransaction.replace(R.id.containerView, new CustomerTabFragment()).commit();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +87,7 @@ public class CustomersActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        CustomersTableMagagement.deleteCustomer(AppUtil.getInstance().getDatabaseHandler().getWritableDatabase(), getIntent().getStringExtra("cust_id"));
+                        CustomersTableMagagement.updatedeletedCustomerDetail(AppUtil.getInstance().getDatabaseHandler().getWritableDatabase(), getIntent().getStringExtra("cust_id"));
                         finish();
                     }
                 });

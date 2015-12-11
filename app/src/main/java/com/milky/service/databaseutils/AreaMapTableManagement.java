@@ -5,11 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.milky.viewmodel.VAreaMapper;
-import com.milky.viewmodel.VGlobalSettings;
 
 import java.util.ArrayList;
-
-import javax.xml.validation.Validator;
 
 /**
  * Created by Neha on 12/2/2015.
@@ -106,8 +103,10 @@ public class AreaMapTableManagement {
         if (cursor.moveToFirst()) {
             do {
 
-                if (cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME)) != null)
-                 city =   cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME));
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME)) != null){
+                    city =   cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME));
+                }
+
             }
             while (cursor.moveToNext());
 
@@ -116,6 +115,27 @@ public class AreaMapTableManagement {
         if (db.isOpen())
             db.close();
         return city;
+    }
+    public static ArrayList<String> getallcities(SQLiteDatabase db, final String cityId) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CITY + " WHERE " + TableColumns.CITY_ID + " ='" + cityId + "'";
+        Cursor cursor = db.rawQuery(selectquery, null);
+        ArrayList<String>citylist=new ArrayList<>();
+
+        if (cursor.moveToFirst()) {
+            do {
+
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME)) != null){
+                   citylist.add(cursor.getString(cursor.getColumnIndex(TableColumns.CITY_NAME)));
+                }
+
+            }
+            while (cursor.moveToNext());
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return citylist;
     }
 
 }

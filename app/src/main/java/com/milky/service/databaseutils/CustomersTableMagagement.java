@@ -3,14 +3,9 @@ package com.milky.service.databaseutils;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 
 import com.milky.viewmodel.VCustomersList;
-import com.milky.viewmodel.VDelivery;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.tyczj.extendedcalendarview.DateQuantityModel;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -68,6 +63,7 @@ public class CustomersTableMagagement {
         values.put(TableColumns.DATE_ADDED, holder.getDateAdded());
         values.put(TableColumns.DATE_MODIFIED, holder.getDateAdded());
         values.put(TableColumns.DATE_QUANTITY_MODIFIED, holder.getDateAdded());
+        values.put(TableColumns.ISDELETED, "0");
 
         db.insert(TableNames.TABLE_CUSTOMER, null, values);
     }
@@ -108,7 +104,9 @@ public class CustomersTableMagagement {
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE)) != null)
                     holder.setRate(cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE)));
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)) != null)
-                    holder.setRate(cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)));
+                    holder.setQuantityModifiedDate(cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)));
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.ISDELETED)) != null)
+                    holder.setIs_deleted(cursor.getString(cursor.getColumnIndex(TableColumns.ISDELETED)));
             }
 
 
@@ -123,7 +121,7 @@ public class CustomersTableMagagement {
     }
 
     public static ArrayList<VCustomersList> getAllCustomers(SQLiteDatabase db) {
-        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER;
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER + " WHERE " + TableColumns.ISDELETED + " ='" + "0'";
         ArrayList<VCustomersList> list = new ArrayList<>();
 
         Cursor cursor = db.rawQuery(selectquery, null);
@@ -158,8 +156,10 @@ public class CustomersTableMagagement {
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE)) != null)
                     holder.setRate(cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE)));
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)) != null)
-                    holder.setRate(cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)));
+                    holder.setQuantityModifiedDate(cursor.getString(cursor.getColumnIndex(TableColumns.DATE_QUANTITY_MODIFIED)));
                 list.add(holder);
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.ISDELETED)) != null)
+                    holder.setIs_deleted(cursor.getString(cursor.getColumnIndex(TableColumns.ISDELETED)));
             }
             while (cursor.moveToNext());
 
@@ -187,10 +187,15 @@ public class CustomersTableMagagement {
         values.put(TableColumns.DATE_ADDED, holder.getDateAdded());
         values.put(TableColumns.DATE_MODIFIED, holder.getDateAdded());
         values.put(TableColumns.DEFAULT_RATE, holder.getRate());
-
+        values.put(TableColumns.ISDELETED, "0");
         db.update(TableNames.TABLE_CUSTOMER, values, TableColumns.CUSTOMER_ID + " ='" + custId + "'", null);
     }
 
+    public static void updatedeletedCustomerDetail(SQLiteDatabase db, String custId) {
+        ContentValues values = new ContentValues();
+        values.put(TableColumns.ISDELETED, "1");
+        db.update(TableNames.TABLE_CUSTOMER, values, TableColumns.CUSTOMER_ID + " ='" + custId + "'", null);
+    }
 
     public static void updateQuantity(SQLiteDatabase db, VCustomersList holder) {
         ContentValues values = new ContentValues();
@@ -200,19 +205,39 @@ public class CustomersTableMagagement {
         db.update(TableNames.TABLE_CUSTOMER, values, TableColumns.CUSTOMER_ID + " ='" + holder.getCustomerId() + "'", null);
     }
 
-    public static void deleteCustomer(SQLiteDatabase db, String custId) {
-        db.delete(TableNames.TABLE_CUSTOMER, TableColumns.CUSTOMER_ID + " ='" + custId + "'", null);
-    }
+//    public static void deleteCustomer(SQLiteDatabase db, String custId) {
+//        db.delete(TableNames.TABLE_CUSTOMER, TableColumns.CUSTOMER_ID + " ='" + custId + "'", null);
+//    }
 
     public static int getTotalMilkQuantytyByDay(SQLiteDatabase db, String date) {
-        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER +" WHERE "+TableColumns.DATE_QUANTITY_MODIFIED+" ='"+date+"'";
-       int quantityTotal =0;
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER + " WHERE " + TableColumns.DATE_QUANTITY_MODIFIED + " ='" + date + "'";
+        int quantityTotal = 0;
         Cursor cursor = db.rawQuery(selectquery, null);
 
         if (cursor.moveToFirst()) {
             do {
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)) != null)
-                    quantityTotal = Integer.parseInt(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)))+quantityTotal;
+                    quantityTotal = Integer.parseInt(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY))) + quantityTotal;
+            }
+            while (cursor.moveToNext());
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return quantityTotal;
+
+    }
+
+    public static int getTotalMilkQuantyty(SQLiteDatabase db) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER;
+        int quantityTotal = 0;
+        Cursor cursor = db.rawQuery(selectquery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)) != null)
+                    quantityTotal = Integer.parseInt(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY))) + quantityTotal;
 
             }
             while (cursor.moveToNext());
@@ -225,4 +250,106 @@ public class CustomersTableMagagement {
         return quantityTotal;
 
     }
+
+    public static int getTotalMilkQuantytyForCustomer(SQLiteDatabase db, final String custId) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER + " WHERE " + TableColumns.CUSTOMER_ID + " ='" + custId + "'";
+        int quantityTotal = 0;
+        Cursor cursor = db.rawQuery(selectquery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)) != null)
+                    quantityTotal = Integer.parseInt(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)));
+
+            }
+            while (cursor.moveToNext());
+
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return quantityTotal;
+
+    }
+
+    public static ArrayList<DateQuantityModel> getQuantityOfDay(SQLiteDatabase db) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER;
+        ArrayList<DateQuantityModel> quantityList = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery(selectquery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                DateQuantityModel holder = new DateQuantityModel();
+                holder.setCustomerId(cursor.getString(cursor.getColumnIndex(TableColumns.CUSTOMER_ID)));
+                holder.setQuantity(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)));
+                holder.setDate("");
+                quantityList.add(holder);
+            }
+            while (cursor.moveToNext());
+
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return quantityList;
+    }
+
+    public static String getBalanceForCustomer(SQLiteDatabase db, final String custId) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER + " WHERE " + TableColumns.CUSTOMER_ID + " ='" + custId + "'";
+        String balance = "";
+
+        Cursor cursor = db.rawQuery(selectquery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                DateQuantityModel holder = new DateQuantityModel();
+
+
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.BALANCE)) != null)
+                    balance = cursor.getString(cursor.getColumnIndex(TableColumns.BALANCE));
+
+
+            }
+            while (cursor.moveToNext());
+
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return balance;
+    }
+
+    public static ArrayList<DateQuantityModel> getAllCustomersandQuantity(SQLiteDatabase db) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_CUSTOMER;
+        ArrayList<DateQuantityModel> list = new ArrayList<>();
+
+        Cursor cursor = db.rawQuery(selectquery, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                DateQuantityModel holder = new DateQuantityModel();
+
+
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.CUSTOMER_ID)) != null)
+                    holder.setCustomerId(cursor.getString(cursor.getColumnIndex(TableColumns.CUSTOMER_ID)));
+
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)) != null)
+                    holder.setQuantity(cursor.getString(cursor.getColumnIndex(TableColumns.QUANTITY)));
+
+                list.add(holder);
+            }
+            while (cursor.moveToNext());
+
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return list;
+    }
+
 }

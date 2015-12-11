@@ -91,7 +91,6 @@ public class GlobalSetting extends AppCompatActivity {
         /*Fill fields from db*/
         if (_dbHelper.isTableNotEmpty(TableNames.TABLE_GLOBAL_SETTINGS)) {
             VGlobalSettings holder = GlobalSettingTableManagement.getGlobalSettingDetail(_dbHelper.getReadableDatabase());
-            custCode.setText(holder.getId());
             rate.setText(holder.getDefaultRate());
             tax.setText(holder.getTax());
         }
@@ -102,7 +101,7 @@ public class GlobalSetting extends AppCompatActivity {
         setSupportActionBar(_mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
-        getSupportActionBar().setTitle(getResources().getString(R.string.global_setting));
+        getSupportActionBar().setTitle(getResources().getString(R.string.global_setting)) ;
         getSupportActionBar().setDisplayShowTitleEnabled(true);
     }
 

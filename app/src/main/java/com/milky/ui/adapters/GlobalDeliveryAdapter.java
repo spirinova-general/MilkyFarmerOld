@@ -14,15 +14,14 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.milky.R;
-import com.milky.service.databaseutils.ConsumptionCustomersTableManagement;
+import com.milky.service.databaseutils.DeliveryTableManagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.TableNames;
 import com.milky.ui.customers.CustomersList;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
 import com.milky.viewmodel.VCustomersList;
-
-import java.util.Calendar;
+import com.milky.viewmodel.VDelivery;
 
 /**
  * Created by Neha on 11/17/2015.
@@ -71,11 +70,11 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
         DatabaseHelper db = AppUtil.getInstance().getDatabaseHandler();
-        if (db.isTableNotEmpty(TableNames.TABLE_CONSUMED_QUANTITY)) {
-            if (ConsumptionCustomersTableManagement.isHasData(Constants.QUANTITY_UPDATED_DATE, db.getReadableDatabase(),CustomersList._mCustomersList
-                    .get(position).getCustomerId())) {
-                holder._quantity.setText(ConsumptionCustomersTableManagement.getCustomersBySelectedDay(db.getReadableDatabase(), CustomersList._mCustomersList
-                        .get(position).getCustomerId()));
+        if (db.isTableNotEmpty(TableNames.TABLE_DELIVERY)) {
+            if (DeliveryTableManagement.isHasData(db.getReadableDatabase(), CustomersList._mCustomersList
+                    .get(position).getCustomerId(),Constants.DELIVERY_DATE)) {
+                holder._quantity.setText(DeliveryTableManagement.getCustomersBySelectedDay(db.getReadableDatabase(), CustomersList._mCustomersList
+                        .get(position).getCustomerId(), Constants.DELIVERY_DATE));
             } else {
                 holder._quantity.setText(CustomersList._mCustomersList.get(position).getQuantity());
             }
@@ -105,12 +104,13 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
                 final int position2 = finalHolder._quantity.getId();
                 if (s.toString().length() > 0) {
                     VCustomersList holder = new VCustomersList();
-                    holder.setFirstName(CustomersList._mCustomersList.get(position2).getFirstName());
-                    holder.setLastName(CustomersList._mCustomersList.get(position2).getLastName());
                     holder.setQuantity(s.toString());
-                    holder.setQuantityModifiedDate(Constants.QUANTITY_UPDATED_DATE);
+                    holder.setDay(Constants.QUANTITY_UPDATED_DAY);
+                    holder.setMonth(Constants.QUANTITY_UPDATED_MONTH);
+                    holder.setYear(Constants.QUANTITY_UPDATED_YEAR);
                     holder.setCustomerId(CustomersList._mCustomersList.get(position2).getCustomerId());
-                    CustomersList._mCustomersList.set(position2, holder);
+                    holder.setDeliverydate(Constants.DELIVERY_DATE);
+                    CustomersList._mCustomersList.set(position, holder);
                     finalHolder._quantity_input_layout.setError(null);
                 } else {
                     finalHolder._quantity_input_layout.setError(mContext.getString(R.string.field_cant_empty));

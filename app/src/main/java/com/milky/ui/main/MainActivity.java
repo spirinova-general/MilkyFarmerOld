@@ -13,9 +13,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.milky.R;
-import com.milky.service.databaseutils.AreaMapTableManagement;
+import com.milky.service.databaseutils.AreaCityTableManagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.TableNames;
 import com.milky.utils.AppUtil;
@@ -23,12 +24,14 @@ import com.milky.utils.Constants;
 import com.milky.viewmodel.VAreaMapper;
 
 public class MainActivity extends AppCompatActivity {
-    private DrawerLayout mDrawerLayout;
-    private NavigationView mNavigationView;
+
     private FragmentManager mFragmentManager;
     private FragmentTransaction mFragmentTransaction;
     private Toolbar _mToolbar;
     private DatabaseHelper _dbHelper;
+
+    public static DrawerLayout mDrawerLayout;
+    public static NavigationView mNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,22 +46,6 @@ public class MainActivity extends AppCompatActivity {
         * Set up ACTIONBAR
         * */
         supportActionBar();
-        /**
-         *Setup the DrawerLayout and NavigationView
-         */
-
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        mNavigationView = (NavigationView) findViewById(R.id.navView);
-        mNavigationView.setVisibility(View.VISIBLE);
-        /**
-         * Lets inflate the very first fragment
-         * Here , we are inflating the TabFragment as the first Fragment
-         */
-
-        mFragmentManager = getSupportFragmentManager();
-        mFragmentTransaction = mFragmentManager.beginTransaction();
-        mFragmentTransaction.replace(R.id.containerView, new MainTabFragment()).commit();
-
 
         /**
          * Setup click events on the Navigation View Items.
@@ -140,7 +127,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void initResources() {
+    private void initResources() {/**
+     *Setup the DrawerLayout and NavigationView
+     */
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        mNavigationView = (NavigationView) findViewById(R.id.navView);
+        mNavigationView.setVisibility(View.VISIBLE);
+        /**
+         * Lets inflate the very first fragment
+         * Here , we are inflating the TabFragment as the first Fragment
+         */
+
+        mFragmentManager = getSupportFragmentManager();
+        mFragmentTransaction = mFragmentManager.beginTransaction();
+        mFragmentTransaction.replace(R.id.containerView, new MainTabFragment()).commit();
+
+
+
+
+
+        //check if global setting has been set
+        if(!AppUtil.getInstance().getDatabaseHandler().isTableNotEmpty(TableNames.TABLE_GLOBAL_SETTINGS))
+        {
+            mDrawerLayout.openDrawer(mNavigationView);
+            Toast.makeText(MainActivity.this,getResources().getString(R.string.set_global_rate),Toast.LENGTH_SHORT).show();
+        }
+
         String Area[] = new String[]{"Hadaspar", "Worli", "Baner", "Phase5", "Sector 71"};
         int AreaID[] = new int[]{1, 2, 3, 4, 5};
         String City[] = new String[]{"Pune", "Mumbai", "Mohali"};
@@ -164,16 +177,14 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 holder.setAccountId(Constants.ACCOUNT_ID);
-                AreaMapTableManagement.insertAreaDetail(_dbHelper.getWritableDatabase(), holder);
-
-
+                AreaCityTableManagement.insertAreaDetail(_dbHelper.getWritableDatabase(), holder);
             }
         for (int i = 0; i < City.length; i++) {
             VAreaMapper holder = new VAreaMapper();
             holder.setCityId(String.valueOf(CityId[i]));
             holder.setCity(City[i]);
             holder.setAccountId(Constants.ACCOUNT_ID);
-            AreaMapTableManagement.insertCityDetail(_dbHelper.getWritableDatabase(), holder);
+            AreaCityTableManagement.insertCityDetail(_dbHelper.getWritableDatabase(), holder);
         }
     }
 }

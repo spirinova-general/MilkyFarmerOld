@@ -10,6 +10,15 @@ public class VAreaMapper {
     private String city;
     private String cityId;
     private String accountId;
+    private String cityArea;
+
+    public String getCityArea() {
+        return cityArea;
+    }
+
+    public void setCityArea(String cityArea) {
+        this.cityArea = cityArea;
+    }
 
     public String getId() {
         return id;
