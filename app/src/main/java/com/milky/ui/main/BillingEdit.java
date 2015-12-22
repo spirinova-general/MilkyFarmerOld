@@ -45,6 +45,8 @@ public class BillingEdit extends AppCompatActivity {
         start_date.setText(intent.getStringExtra("start_date"));
         end_date.setText(intent.getStringExtra("end_date"));
         rate.setText(intent.getStringExtra("amount"));
+        rate.setFocusable(false);
+        rate.setFocusableInTouchMode(false);
         start_date.setEnabled(false);
         end_date.setEnabled(false);
         milk_quantity.setText(intent.getStringExtra("quantity"));
