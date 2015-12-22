@@ -1,29 +1,74 @@
 package com.milky.ui.main;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.reflect.TypeToken;
 import com.milky.R;
+import com.milky.service.databaseutils.AccountAreaMapping;
 import com.milky.service.databaseutils.AreaCityTableManagement;
+import com.milky.service.databaseutils.AreaMapTableManagement;
+import com.milky.service.databaseutils.BillTableManagement;
+import com.milky.service.databaseutils.CustomerSettingTableManagement;
+import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.TableNames;
+import com.milky.service.serverapi.HttpAsycTask;
+import com.milky.service.serverapi.OnTaskCompleteListner;
+import com.milky.service.serverapi.ServerApis;
+import com.milky.ui.adapters.AreaCityAdapter;
+import com.milky.ui.adapters.AreaCitySpinnerAdapter;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
+import com.milky.utils.DateTimeSerializer;
 import com.milky.viewmodel.VAreaMapper;
+import com.milky.viewmodel.VCustomersList;
 
-public class MainActivity extends AppCompatActivity {
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Type;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements OnTaskCompleteListner {
 
     private FragmentManager mFragmentManager;
     private FragmentTransaction mFragmentTransaction;
@@ -32,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static DrawerLayout mDrawerLayout;
     public static NavigationView mNavigationView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,10 +129,113 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    ArrayList<VAreaMapper> _areaList = new ArrayList<>(), _areacityList = new ArrayList<>();
+    View view1, searchView;
+    Spinner spinner;
+    int selectedPosition = 0;
+    public static String selectedAreaId = "";
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.customers_menu, menu);
+
+        MenuInflater mi = getMenuInflater();
+        mi.inflate(R.menu.customers_menu, menu);
+        MenuItem mSpinnerItem1 = menu.findItem(R.id.areaSpinner);
+        MenuItem mSpinnerItem2 = menu.findItem(R.id.action_search);
+        view1 = mSpinnerItem1.getActionView();
+        searchView = mSpinnerItem2.getActionView();
+        if (view1 instanceof Spinner) {
+            spinner = (Spinner) view1;
+            spinner.setBackgroundColor(getResources().getColor(R.color.white));
+            spinner.setAdapter(adp1);
+            spinner.setSelection(selectedPosition);
+
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+                @Override
+                public void onItemSelected(AdapterView<?> arg0, View arg1,
+                                           int arg2, long arg3) {
+                    selectedPosition = arg2;
+                    selectedAreaId = _areacityList.get(arg2).getAreaId();
+                    if (getFragmentRefreshListener() != null) {
+                        getFragmentRefreshListener().onRefresh();
+                    }
+
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) {
+                    // TODO Auto-generated method stub
+
+
+                }
+            });
+
+        }
+        if (view1 instanceof SearchView) {
+            SearchView actionSearchView = (SearchView) searchView;
+            final EditText editSearch;
+            actionSearchView.setIconifiedByDefault(false);
+            editSearch = (EditText) searchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
+            editSearch.setHintTextColor(getResources().getColor(R.color.white));
+            actionSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    if (TextUtils.isEmpty(editSearch.getText().toString())) {
+                        if (getFragmentRefreshListener() != null) {
+                            getFragmentRefreshListener().onRefresh();
+                        }
+                    } else {
+                        if (getFragmentRefreshListener() != null) {
+                            getFragmentRefreshListener().onRefresh();
+                        }
+                    }
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    return false;
+                }
+            });
+            //Set up your OnQueryTextListener here);
+
+        }
         return true;
+    }
+    ArrayList<String> areas;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (getFragmentRefreshListener() != null) {
+            getFragmentRefreshListener().onRefresh();
+        }
+        _areaList.clear();
+        _areacityList.clear();
+        areas = AccountAreaMapping.getArea(_dbHelper.getReadableDatabase());
+        for (int i = 0; i < areas.size(); ++i) {
+            _areaList.add(AreaMapTableManagement.getAreabyAreaId(_dbHelper.getReadableDatabase(), areas.get(i)));
+        }
+        VAreaMapper areacity = new VAreaMapper();
+        areacity.setArea("");
+        areacity.setAreaId("");
+        areacity.setCityId("");
+        areacity.setCity("");
+        areacity.setCityArea("All");
+        _areacityList.add(areacity);
+        for (int i = 0; i < _areaList.size(); i++) {
+            areacity = new VAreaMapper();
+            areacity.setArea(_areaList.get(i).getArea());
+            areacity.setAreaId(_areaList.get(i).getAreaId());
+            areacity.setCityId(_areaList.get(i).getCityId());
+            areacity.setCity(AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), _areaList.get(i).getCityId()));
+            areacity.setCityArea(areacity.getArea() + areacity.getCity());
+            _areacityList.add(areacity);
+
+
+        }
+        adp1 = new AreaCitySpinnerAdapter(MainActivity.this, R.id.spinnerText
+                , _areacityList);
     }
 
     private void supportActionBar() {
@@ -105,32 +254,33 @@ public class MainActivity extends AppCompatActivity {
         int page = POSITION;
         switch (page) {
             case 0:
-                menu.findItem(R.id.areas).setVisible(true);
                 menu.findItem(R.id.action_search).setVisible(false);
+                menu.findItem(R.id.areaSpinner).setVisible(false);
                 menu.findItem(R.id.action_add_bill).setVisible(false);
 
 
                 break;
             case 1:
-                menu.findItem(R.id.areas).setVisible(true);
                 menu.findItem(R.id.action_search).setVisible(true);
+                menu.findItem(R.id.areaSpinner).setVisible(true);
                 menu.findItem(R.id.action_add_bill).setVisible(false);
 
                 break;
             case 2:
-                menu.findItem(R.id.areas).setVisible(true);
                 menu.findItem(R.id.action_search).setVisible(false);
+                menu.findItem(R.id.areaSpinner).setVisible(false);
                 menu.findItem(R.id.action_add_bill).setVisible(false);
                 break;
         }
         return true;
     }
 
+    AreaCitySpinnerAdapter adp1;
 
     private void initResources() {/**
      *Setup the DrawerLayout and NavigationView
      */
-
+        _dbHelper = AppUtil.getInstance().getDatabaseHandler();
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         mNavigationView = (NavigationView) findViewById(R.id.navView);
         mNavigationView.setVisibility(View.VISIBLE);
@@ -144,14 +294,10 @@ public class MainActivity extends AppCompatActivity {
         mFragmentTransaction.replace(R.id.containerView, new MainTabFragment()).commit();
 
 
-
-
-
         //check if global setting has been set
-        if(!AppUtil.getInstance().getDatabaseHandler().isTableNotEmpty(TableNames.TABLE_GLOBAL_SETTINGS))
-        {
+        if (!AppUtil.getInstance().getDatabaseHandler().isTableNotEmpty(TableNames.TABLE_GLOBAL_SETTINGS)) {
             mDrawerLayout.openDrawer(mNavigationView);
-            Toast.makeText(MainActivity.this,getResources().getString(R.string.set_global_rate),Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, getResources().getString(R.string.set_global_rate), Toast.LENGTH_SHORT).show();
         }
 
         String Area[] = new String[]{"Hadaspar", "Worli", "Baner", "Phase5", "Sector 71"};
@@ -186,5 +332,147 @@ public class MainActivity extends AppCompatActivity {
             holder.setAccountId(Constants.ACCOUNT_ID);
             AreaCityTableManagement.insertCityDetail(_dbHelper.getWritableDatabase(), holder);
         }
+
+
     }
+
+    private JSONArray jsonDataArray;
+
+    @Override
+    public void onTaskCompleted(JSONArray result, String type, HashMap<String, String> requestType) {
+
+
+        if (ServerApis.STATUS == 1) {
+            if (type == ServerApis.SYNC) {
+                if (requestType.get("Customer_List").equals("0")) {
+                    CustomersTableMagagement.updateSyncedData(_dbHelper.getWritableDatabase());
+                } else if (requestType.get("Bill_List").equals("0")) {
+                    BillTableManagement.updateSyncedData(_dbHelper.getWritableDatabase());
+                }
+            }
+        } else {
+
+
+        }
+    }
+
+    public FragmentRefreshListener getFragmentRefreshListener() {
+        return fragmentRefreshListener;
+    }
+
+    public void setFragmentRefreshListener(FragmentRefreshListener fragmentRefreshListener) {
+        this.fragmentRefreshListener = fragmentRefreshListener;
+    }
+
+    private FragmentRefreshListener fragmentRefreshListener;
+
+    public interface FragmentRefreshListener {
+        void onRefresh();
+    }
+
+    public void SyncNow() {
+
+        HttpAsycTask dataTask = new HttpAsycTask();
+        dataTask.runRequest(ServerApis.SYNC, getAllDataToSync(), MainActivity.this, true, requestedList);
+    }
+
+    public static HashMap<String, String> requestedList = new HashMap<>();
+
+    private List<NameValuePair> getAllDataToSync() {
+        JSONArray jsonArray;
+        JSONObject jsonObject = new JSONObject();
+        if (_dbHelper.isTableNotEmpty(TableNames.TABLE_CUSTOMER)) {
+            ArrayList<VCustomersList> custList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
+            if (custList.size() == 0) {
+
+                requestedList.put("Customer_List", "1");
+
+            } else {
+                jsonArray = new JSONArray();
+                for (int i = 0; i < custList.size(); ++i) {
+                    JSONObject obj = new JSONObject();
+                    try {
+                        obj.put("FirstName", custList.get(i).getFirstName());
+                        obj.put("LastName", custList.get(i).getLastName());
+                        obj.put("Mobile", custList.get(i).getMobile());
+                        obj.put("Address1", custList.get(i).getAddress1());
+                        obj.put("Address2", custList.get(i).getAddress2());
+                        obj.put("Balance", custList.get(i).getBalance_amount());
+                        obj.put("DateAdded", custList.get(i).getDateAdded());
+                        obj.put("DateModified", custList.get(i).getDateModified());
+                        obj.put("AccountId", "5");
+                        obj.put("AreaId", "1");
+                        obj.put("Dirty", "0");
+
+                        jsonArray.put(obj);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                try {
+                    jsonObject.put("Customer_List", jsonArray);
+                    requestedList.put("Customer_List", "0");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        }
+        if (_dbHelper.isTableNotEmpty(TableNames.TABLE_CUSTOMER_BILL)) {
+            ArrayList<VCustomersList> billList = BillTableManagement.getCustomersBill(_dbHelper.getReadableDatabase());
+            if (billList.size() == 0) {
+
+                requestedList.put("Customer_List", "1");
+
+            } else {
+                jsonArray = new JSONArray();
+                for (int i = 0; i < billList.size(); ++i) {
+                    JSONObject obj = new JSONObject();
+                    try {
+                        obj.put("CustomerId", billList.get(i).getCustomerId());
+                        obj.put("StartDate", billList.get(i).getStart_date());
+                        obj.put("EndDate", billList.get(i).getEnd_date());
+                        obj.put("Quantity", billList.get(i).getQuantity());
+                        obj.put("Balance", "0");
+                        obj.put("DateAdded", billList.get(i).getDateAdded());
+                        obj.put("DateModified", billList.get(i).getDateModified());
+                        obj.put("AccountId", "5");
+                        obj.put("AreaId", "1");
+                        obj.put("Dirty", "0");
+                        obj.put("Adjustment", billList.get(i).getAdjustment());
+                        obj.put("TOTAL_AMOUNT", billList.get(i).getBalance_amount());
+                        obj.put("TAX", billList.get(i).getTax());
+                        obj.put("IsCleared", billList.get(i).getIsCleared());
+                        obj.put("PaymentMade", billList.get(i).getPaymentMade());
+
+                        jsonArray.put(obj);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                try {
+                    jsonObject.put("Bill_List", jsonArray);
+                    requestedList.put("Bill_List", "0");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        }
+
+
+        List<NameValuePair> nameValuePair = new ArrayList<>();
+        if (jsonObject.length() > 0)
+            nameValuePair.add(new BasicNameValuePair("", jsonObject.toString()));
+
+
+        return nameValuePair;
+    }
+
 }

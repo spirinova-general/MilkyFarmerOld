@@ -317,8 +317,14 @@ public class ExtendedCalendarView extends RelativeLayout implements OnItemClickL
         CalendarAdapter.setRegistrationTime(value);
     }
 
-    public void setTotalQuantity(final int totalQuantity) {
+    public void setTotalQuantity(final float totalQuantity) {
         CalendarAdapter.totalData(totalQuantity);
+
+
+    }
+    public void refreshAdapter()
+    {if(mAdapter!=null)
+        calendar.setAdapter(mAdapter);
     }
 
     public void quantityByDate(final ArrayList<DateQuantityModel> totalList) {

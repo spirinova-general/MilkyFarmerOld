@@ -3,12 +3,13 @@ package com.milky.ui.main;
 import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
 import com.milky.R;
 
-public class SignUp extends Activity {
+public class SignUp extends AppCompatActivity {
 private Button _signUp,_signIn;
 
     @Override

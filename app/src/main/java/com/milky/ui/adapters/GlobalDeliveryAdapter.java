@@ -3,7 +3,6 @@ package com.milky.ui.adapters;
 import android.app.Activity;
 import android.content.Context;
 import android.support.design.widget.TextInputLayout;
-import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -11,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.milky.R;
@@ -21,7 +21,6 @@ import com.milky.ui.customers.CustomersList;
 import com.milky.utils.AppUtil;
 import com.milky.utils.Constants;
 import com.milky.viewmodel.VCustomersList;
-import com.milky.viewmodel.VDelivery;
 
 /**
  * Created by Neha on 11/17/2015.
@@ -60,7 +59,7 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
             convertView = mInflater.inflate(R.layout.global_delivery_items, parent, false);
             holder._nameView = (TextView) convertView.findViewById(R.id.nameView);
             holder._firstName = (TextView) convertView.findViewById(R.id.first_name);
-            holder._quantity = (AppCompatEditText) convertView.findViewById(R.id.milk_quantity);
+            holder._quantity = (EditText) convertView.findViewById(R.id.milk_quantity);
             holder._latsName = (TextView) convertView.findViewById(R.id.last_name);
             holder._quantity.setInputType(InputType.TYPE_CLASS_NUMBER);
             holder._quantity_input_layout = (TextInputLayout) convertView.findViewById(R.id.quantity_layout);
@@ -72,8 +71,8 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
         DatabaseHelper db = AppUtil.getInstance().getDatabaseHandler();
         if (db.isTableNotEmpty(TableNames.TABLE_DELIVERY)) {
             if (DeliveryTableManagement.isHasData(db.getReadableDatabase(), CustomersList._mCustomersList
-                    .get(position).getCustomerId(),Constants.DELIVERY_DATE)) {
-                holder._quantity.setText(DeliveryTableManagement.getCustomersBySelectedDay(db.getReadableDatabase(), CustomersList._mCustomersList
+                    .get(position).getCustomerId(), Constants.DELIVERY_DATE)) {
+                holder._quantity.setText(DeliveryTableManagement.getQuantityBySelectedDay(db.getReadableDatabase(), CustomersList._mCustomersList
                         .get(position).getCustomerId(), Constants.DELIVERY_DATE));
             } else {
                 holder._quantity.setText(CustomersList._mCustomersList.get(position).getQuantity());
@@ -105,12 +104,9 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
                 if (s.toString().length() > 0) {
                     VCustomersList holder = new VCustomersList();
                     holder.setQuantity(s.toString());
-                    holder.setDay(Constants.QUANTITY_UPDATED_DAY);
-                    holder.setMonth(Constants.QUANTITY_UPDATED_MONTH);
-                    holder.setYear(Constants.QUANTITY_UPDATED_YEAR);
                     holder.setCustomerId(CustomersList._mCustomersList.get(position2).getCustomerId());
                     holder.setDeliverydate(Constants.DELIVERY_DATE);
-                    CustomersList._mCustomersList.set(position, holder);
+                    CustomersList._mDeliveryList.add(holder);
                     finalHolder._quantity_input_layout.setError(null);
                 } else {
                     finalHolder._quantity_input_layout.setError(mContext.getString(R.string.field_cant_empty));
@@ -130,7 +126,7 @@ public class GlobalDeliveryAdapter extends BaseAdapter {
 
     private class ViewHolder {
         private TextView _firstName, _latsName, _nameView;
-        private AppCompatEditText _quantity;
+        private EditText _quantity;
         private TextInputLayout _quantity_input_layout;
     }
 

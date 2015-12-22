@@ -17,6 +17,7 @@ public class AreaMapTableManagement {
         values.put(TableColumns.ACCOUNT_ID, holder.getAccountId());
         values.put(TableColumns.AREA_NAME, holder.getArea());
         values.put(TableColumns.AREA_ID, holder.getAreaId());
+        values.put(TableColumns.SYNC_STATUS,"0");
         values.put(TableColumns.CITY_ID, holder.getCityId());
         db.insert(TableNames.TABLE_AREA, null, values);
     }
@@ -55,6 +56,8 @@ public class AreaMapTableManagement {
 
     public static ArrayList<VAreaMapper> getAreaById(SQLiteDatabase db, final String accountId) {
         String selectquery = "SELECT * FROM " + TableNames.TABLE_AREA + " WHERE " + TableColumns.ACCOUNT_ID + " ='" + accountId + "'";
+
+
         Cursor cursor = db.rawQuery(selectquery, null);
         ArrayList<VAreaMapper> areaList = new ArrayList<>();
         if (cursor.moveToFirst()) {
@@ -76,7 +79,27 @@ public class AreaMapTableManagement {
             db.close();
         return areaList;
     }
+    public static VAreaMapper getAreabyAreaId(SQLiteDatabase db, final String arrId) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_AREA + " WHERE " + TableColumns.AREA_ID + " ='" + arrId + "'";
+        Cursor cursor = db.rawQuery(selectquery, null);
+        VAreaMapper holder = new VAreaMapper();
 
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.AREA_NAME)) != null)
+                    holder.setArea(cursor.getString(cursor.getColumnIndex(TableColumns.AREA_NAME)));
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.AREA_ID)) != null)
+                    holder.setAreaId(cursor.getString(cursor.getColumnIndex(TableColumns.AREA_ID)));
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.CITY_ID)) != null)
+                    holder.setCityId(cursor.getString(cursor.getColumnIndex(TableColumns.CITY_ID)));
+            }
+            while (cursor.moveToNext());
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return holder;
+    }
     public static String getAreaNameById(SQLiteDatabase db, final String areaId) {
         String selectquery = "SELECT * FROM " + TableNames.TABLE_AREA + " WHERE " + TableColumns.AREA_ID + " ='" + areaId + "'";
         Cursor cursor = db.rawQuery(selectquery, null);

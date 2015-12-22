@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.milky.R;
 import com.milky.service.databaseutils.AreaMapTableManagement;
 import com.milky.utils.AppUtil;
+import com.milky.utils.Constants;
 import com.milky.viewmodel.VAreaMapper;
 
 import java.util.ArrayList;
@@ -82,11 +83,17 @@ public class AreaCityAdapter extends ArrayAdapter<VAreaMapper> {
                         suggestions.add(Area);
                     }
                 }
+                if(suggestions.size()>0)
+                    Constants.validArea = true;
+                else
+                Constants.validArea=false;
                 FilterResults filterResults = new FilterResults();
                 filterResults.values = suggestions;
                 filterResults.count = suggestions.size();
                 return filterResults;
             } else {
+                suggestions.clear();
+                Constants.validArea=false;
                 return new FilterResults();
             }
         }
@@ -103,4 +110,6 @@ public class AreaCityAdapter extends ArrayAdapter<VAreaMapper> {
             }
         }
     };
+
+
 }

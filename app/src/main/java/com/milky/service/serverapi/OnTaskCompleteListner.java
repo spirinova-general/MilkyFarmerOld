@@ -1,7 +1,10 @@
-package com.milky.service.databaseutils.serverapi;
+package com.milky.service.serverapi;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
+
+import java.util.HashMap;
+import java.util.List;
 
 public interface OnTaskCompleteListner {
-	 void onTaskCompleted(JSONObject result, String type);
+    void onTaskCompleted(JSONArray result, String type, HashMap<String,String> listType);
 }

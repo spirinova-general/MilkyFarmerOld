@@ -19,6 +19,8 @@ public class GlobalSettingTableManagement {
         values.put(TableColumns.DATE_MODIFIED, holder.getDateModified());
         values.put(TableColumns.DEFAULT_RATE, holder.getDefaultRate());
         values.put(TableColumns.TAX, holder.getTax());
+        values.put(TableColumns.DIRTY, "0");
+        values.put(TableColumns.SYNC_STATUS, "0");
         db.insert(TableNames.TABLE_GLOBAL_SETTINGS, null, values);
     }
 
@@ -55,6 +57,24 @@ public class GlobalSettingTableManagement {
             do {
                 if (cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE)) != null)
                    rate = cursor.getString(cursor.getColumnIndex(TableColumns.DEFAULT_RATE));
+
+            }
+            while (cursor.moveToNext()) ;
+
+        }
+        cursor.close();
+        if (db.isOpen())
+            db.close();
+        return rate;
+    }
+    public static String getDefaultTax(SQLiteDatabase db) {
+        String selectquery = "SELECT * FROM " + TableNames.TABLE_GLOBAL_SETTINGS;
+        String rate = null;
+        Cursor cursor = db.rawQuery(selectquery, null);
+        if (cursor.moveToFirst()) {
+            do {
+                if (cursor.getString(cursor.getColumnIndex(TableColumns.TAX)) != null)
+                    rate = cursor.getString(cursor.getColumnIndex(TableColumns.TAX));
 
             }
             while (cursor.moveToNext()) ;

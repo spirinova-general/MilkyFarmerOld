@@ -35,13 +35,12 @@ public class CustomersList extends AppCompatActivity {
     private ListView _mCustomers;
     private int _mDay;
     private String _mMonth;
-    private Intent _mIntent;
     private Toolbar _mToolbar;
     private GlobalDeliveryAdapter _mAdaapter;
     private Button _save, _cancel;
     private DatabaseHelper _dbHelper;
     private LinearLayout _bottomLayout;
-    public static List<VCustomersList> _mCustomersList;
+    public static List<VCustomersList> _mCustomersList, _mDeliveryList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,14 +54,13 @@ public class CustomersList extends AppCompatActivity {
         _save = (Button) findViewById(R.id.save);
         _cancel = (Button) findViewById(R.id.cancel);
         _bottomLayout = (LinearLayout) findViewById(R.id.bottom_Layout);
-        _mIntent = this.getIntent();
         String month = new DateFormatSymbols().getMonths()[(Constants.SELECTED_DAY).getMonth()];
         _mDay = Constants.SELECTED_DAY.getDay();
         _mMonth = month;
         setActionBar();
         _dbHelper = AppUtil.getInstance().getDatabaseHandler();
         if (_dbHelper.isTableNotEmpty(TableNames.TABLE_CUSTOMER)) {
-            _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
+            _mCustomersList = CustomersTableMagagement.getAllCustomersBySelectedDate(_dbHelper.getReadableDatabase());
             _mAdaapter = new GlobalDeliveryAdapter(this, String.valueOf(Constants.SELECTED_DAY));
             _mCustomers.setItemsCanFocus(true);
             _mCustomers.setAdapter(_mAdaapter);
@@ -102,7 +100,6 @@ public class CustomersList extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
         if (id == android.R.id.home) {
             finish();
         }
@@ -113,20 +110,14 @@ public class CustomersList extends AppCompatActivity {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.save:
-                if (_mCustomersList.size() > 0)
-                    for (int i = 0; i < _mCustomersList.size(); i++) {
-                        VCustomersList list = new VCustomersList();
-                        list.setDeliverydate(Constants.DELIVERY_DATE);
-                        list.setQuantity(_mCustomersList.get(i).getQuantity());
-                        list.setDay(Constants.QUANTITY_UPDATED_DAY);
-                        list.setMonth(Constants.QUANTITY_UPDATED_MONTH);
-                        list.setYear(Constants.QUANTITY_UPDATED_YEAR);
-                        list.setCustomerId(_mCustomersList.get(i).getCustomerId());
+                if (_mDeliveryList.size() > 0)
+                    for (int i = 0; i < _mDeliveryList.size(); i++) {
+
                         if (DeliveryTableManagement.isHasData(_dbHelper.getReadableDatabase(),
-                                list.getCustomerId(), list.getDeliverydate()))
-                            DeliveryTableManagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), list);
+                                _mDeliveryList.get(i).getCustomerId(), _mDeliveryList.get(i).getDeliverydate()))
+                            DeliveryTableManagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), _mDeliveryList.get(i));
                         else
-                            DeliveryTableManagement.insertCustomerDetail(_dbHelper.getWritableDatabase(), list);
+                            DeliveryTableManagement.insertCustomerDetail(_dbHelper.getWritableDatabase(), _mDeliveryList.get(i));
                     }
                 finish();
                 break;

@@ -18,6 +18,7 @@ public class AreaCityTableManagement {
         values.put(TableColumns.AREA_NAME, holder.getArea());
         values.put(TableColumns.AREA_ID, holder.getAreaId());
         values.put(TableColumns.CITY_ID, holder.getCityId());
+        values.put(TableColumns.SYNC_STATUS,"0");
         db.insert(TableNames.TABLE_AREA, null, values);
     }
 

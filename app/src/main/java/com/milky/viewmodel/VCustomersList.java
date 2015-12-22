@@ -25,7 +25,19 @@ public class VCustomersList {
     private String tax;
     private String quantityModifiedDate;
     private String day, month, year, deliverydate;
+    private String adjustment;
+    private String isCleared;
+    private String paymentMade;
+    private String dirty;
 
+
+    public String getDirty() {
+        return dirty;
+    }
+
+    public void setDirty(String dirty) {
+        this.dirty = dirty;
+    }
 
     public String getIs_deleted() {
 
@@ -245,5 +257,30 @@ public class VCustomersList {
 
     public void setAreaId(String areaId) {
         this.areaId = areaId;
+    }
+
+    public String getAdjustment() {
+        return adjustment;
+    }
+
+    public void setAdjustment(String adjustment) {
+        this.adjustment = adjustment;
+    }
+
+    public String getIsCleared() {
+
+        return isCleared;
+    }
+
+    public void setIsCleared(String isCleared) {
+        this.isCleared = isCleared;
+    }
+
+    public String getPaymentMade() {
+        return paymentMade;
+    }
+
+    public void setPaymentMade(String paymentMade) {
+        this.paymentMade = paymentMade;
     }
 }

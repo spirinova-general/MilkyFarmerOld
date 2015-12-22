@@ -42,6 +42,10 @@ public class TableColumns {
     public static final String YEAR = "year";
     public static final String IS_QUANTITY_UPDATED = "is_quantity_updated";
     public static final String ISDELETED = "isdeleted";
+    public static final String DIRTY = "dirty";
+    public static final String TOTAL_AMOUNT ="total_amount";
+
+    public static String SYNC_STATUS = "sync_status";
 
 }
 

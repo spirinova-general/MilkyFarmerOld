@@ -27,11 +27,7 @@ public class AreaCitySpinnerAdapter extends ArrayAdapter<VAreaMapper> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {   // Ordinary view in Spinner, we use android.R.layout.simple_spinner_item
-        return super.getView(position, convertView, parent);
-    }
 
-    @Override
-    public View getDropDownView(int position, View convertView, ViewGroup parent) {   // This view starts when we click the spinner.
         View row = convertView;
         if (row == null) {
             LayoutInflater inflater = _context.getLayoutInflater();
@@ -42,12 +38,33 @@ public class AreaCitySpinnerAdapter extends ArrayAdapter<VAreaMapper> {
 
         if (item != null) {
             TextView area = (TextView) row.findViewById(R.id.spinnerText);
+            area.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+            area.setBackgroundColor(_context.getResources().getColor(R.color.white));
+            area.setText(item.getCityArea());
 
-            area.setText(item.getCity());
+        }
+
+        return row;
+    }
+
+    @Override
+    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+        View row = convertView;
+        if (row == null) {
+            LayoutInflater inflater = _context.getLayoutInflater();
+            row = inflater.inflate(R.layout.spinner_layout, parent, false);
+        }
+
+        VAreaMapper item = dataList.get(position);
+
+        if (item != null) {
+            TextView area = (TextView) row.findViewById(R.id.spinnerText);
+            area.setTextColor(_context.getResources().getColor(R.color.colorPrimary));
+            area.setBackgroundColor(_context.getResources().getColor(R.color.white));
+            area.setText(item.getCityArea());
 
         }
 
         return row;
     }
 }
-

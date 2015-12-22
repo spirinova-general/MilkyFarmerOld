@@ -18,11 +18,18 @@ import com.milky.R;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.TableNames;
+import com.milky.service.serverapi.HttpAsycTask;
+import com.milky.service.serverapi.OnTaskCompleteListner;
+import com.milky.service.serverapi.ServerApis;
 import com.milky.ui.adapters.CustomersFragmentListAdapter;
 import com.milky.ui.customers.CustomerAddActivity;
 import com.milky.utils.AppUtil;
+import com.milky.utils.Constants;
 import com.milky.viewmodel.VCustomersList;
 
+import org.json.JSONArray;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,11 +48,35 @@ public class CustomersFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
         if (_dbHelper.isTableNotEmpty(TableNames.TABLE_CUSTOMER)) {
-            _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
-            mTotalCustomers.setText(String.valueOf(_mCustomersList.size()) + " " + "Customers ");
-            _mAdapter = new CustomersFragmentListAdapter(getActivity(), _mCustomersList);
-            recList.setAdapter(_mAdapter);
+
+            ((MainActivity) getActivity()).setFragmentRefreshListener(new MainActivity.FragmentRefreshListener() {
+                @Override
+                public void onRefresh() {
+
+                    if (MainActivity.selectedAreaId.equals("")) {
+                        _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
+                        mTotalCustomers.setText(String.valueOf(_mCustomersList.size()) + " " + "Customers ");
+                        _mAdapter = new CustomersFragmentListAdapter(getActivity(), _mCustomersList);
+                        recList.setAdapter(_mAdapter);
+                    } else {
+                        _mCustomersList = CustomersTableMagagement.getAllCustomersByArea(_dbHelper.getReadableDatabase(), MainActivity.selectedAreaId);
+                        mTotalCustomers.setText(String.valueOf(_mCustomersList.size()) + " " + "Customers ");
+                        _mAdapter = new CustomersFragmentListAdapter(getActivity(), _mCustomersList);
+                        recList.setAdapter(_mAdapter);
+                    }
+
+                }
+            });
+
+                _mCustomersList = CustomersTableMagagement.getAllCustomers(_dbHelper.getReadableDatabase());
+                mTotalCustomers.setText(String.valueOf(_mCustomersList.size()) + " " + "Customers ");
+                _mAdapter = new CustomersFragmentListAdapter(getActivity(), _mCustomersList);
+                recList.setAdapter(_mAdapter);
+
+
+
         } else
             mTotalCustomers.setText(String.valueOf("No customer added yet !"));
 
@@ -84,6 +115,12 @@ public class CustomersFragment extends Fragment {
                 }
             }
         });
+        mTotalCustomers.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                ((MainActivity) getActivity()).SyncNow();
+            }
+        });
 
     }
 
@@ -92,4 +129,6 @@ public class CustomersFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.customers_menu, menu);
     }
+
+
 }

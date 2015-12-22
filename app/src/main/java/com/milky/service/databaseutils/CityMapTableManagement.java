@@ -21,6 +21,7 @@ public class CityMapTableManagement {
         values.put(TableColumns.AREA_ID, holder.getAreaId());
         values.put(TableColumns.CITY_NAME, holder.getArea());
         values.put(TableColumns.CITY_ID, holder.getAreaId());
+        values.put(TableColumns.SYNC_STATUS,"0");
 
         db.insert(TableNames.TABLE_CITY, null, values);
     }

@@ -15,9 +15,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.milky.R;
+import com.milky.service.databaseutils.CustomerSettingTableManagement;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.ui.customers.CustomerTabFragment;
 import com.milky.utils.AppUtil;
+import com.milky.utils.Constants;
 
 /**
  * Created by Neha on 11/19/2015.
@@ -29,6 +31,7 @@ public class CustomersActivity extends AppCompatActivity {
 
     private boolean _mIsToAddCustomer = false;
     public static Intent _mIntent;
+    public static String titleString ="";
 
     @Override
     protected void onResume() {
@@ -76,10 +79,9 @@ public class CustomersActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(CustomersActivity.this);
-                AlertDialog dialog = builder.create();
                 builder.setTitle("Delete Customer ?");
-                builder.setMessage("Want to delete " + getIntent().getStringExtra("fname")+" "+ getIntent().getStringExtra("lname")
-                +"?");
+                builder.setMessage("Want to delete " + getIntent().getStringExtra("fname") + " " + getIntent().getStringExtra("lname")
+                        + "?");
 
 
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -87,7 +89,8 @@ public class CustomersActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        CustomersTableMagagement.updatedeletedCustomerDetail(AppUtil.getInstance().getDatabaseHandler().getWritableDatabase(), getIntent().getStringExtra("cust_id"));
+                        CustomersTableMagagement.updatedeletedCustomerDetail(AppUtil.getInstance().getDatabaseHandler().getWritableDatabase(), getIntent().getStringExtra("cust_id"), Constants.getCurrentDate());
+                        CustomerSettingTableManagement.updateDeletetdCustomer(AppUtil.getInstance().getDatabaseHandler().getWritableDatabase(), getIntent().getStringExtra("cust_id"));
                         finish();
                     }
                 });
@@ -104,6 +107,7 @@ public class CustomersActivity extends AppCompatActivity {
 
         });
         title.setText(_mIntent.getStringExtra("fname") + _mIntent.getStringExtra("lname"));
+        titleString =_mIntent.getStringExtra("fname") + _mIntent.getStringExtra("lname");
         subTitle.setText(_mIntent.getStringExtra("added_date"));
         getSupportActionBar().setCustomView(mCustomView);
         getSupportActionBar().setDisplayShowCustomEnabled(true);

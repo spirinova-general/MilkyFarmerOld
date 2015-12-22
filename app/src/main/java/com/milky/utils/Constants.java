@@ -15,11 +15,14 @@ public class Constants {
     public static String QUANTITY_UPDATED_MONTH = "";
     public static String QUANTITY_UPDATED_YEAR = "";
     public static String DELIVERY_DATE = "";
+    public static boolean CUSTOMER_ADDED=false;
+    public static SimpleDateFormat format = new SimpleDateFormat("MM-dd-yyyy");
+    public static boolean validArea = false;
 
 
     public static String getCurrentDate() {
         Calendar cal = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
         return df.format(cal.getTime());
 
     }

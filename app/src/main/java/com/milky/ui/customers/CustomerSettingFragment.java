@@ -18,7 +18,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.milky.R;
+import com.milky.service.databaseutils.AccountAreaMapping;
 import com.milky.service.databaseutils.AreaMapTableManagement;
+import com.milky.service.databaseutils.CustomerSettingTableManagement;
 import com.milky.service.databaseutils.CustomersTableMagagement;
 import com.milky.service.databaseutils.DatabaseHelper;
 import com.milky.service.databaseutils.GlobalSettingTableManagement;
@@ -31,8 +33,9 @@ import com.milky.utils.TextValidationMessage;
 import com.milky.viewmodel.VAreaMapper;
 import com.milky.viewmodel.VCustomersList;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Calendar;
 
 
 /**
@@ -44,19 +47,20 @@ public class CustomerSettingFragment extends Fragment {
     private Button _mSave, _mCancel;
     private FloatingActionButton _mEdit;
     private int dataCount = 0;
-    private LinearLayout _mBottomLayout;
+    private LinearLayout _mBottomLayout, _deliverDateLayout;
     private TextInputLayout _phone_textinput_layout;
     private AutoCompleteTextView _autocomplete_city_area;
-    private String selectedCityId = "", selectedAreaId = "";
+    private String selectedCityId = "", selectedAreaId = "", tempAreaId = "", tempCityId = "";
     private TextInputLayout name_layout, last_name_layout, balance_layout, flat_number_layout, street_layout, milk_quantity_layout, rate_layout;
     private VCustomersList dataHolder;
     private DatabaseHelper _dbHelper;
     private String itemName;
     private String[] autoCompleteData;
+    private String previousSelectedArea = "";
     private String[] mData;
-    private ArrayList<VAreaMapper> areaList, _areacityList = new ArrayList<>();
-
-
+    private ArrayList<VAreaMapper> areaList = new ArrayList<>(), _areacityList = new ArrayList<>();
+    private String formattedDate;
+    private Calendar c;
     //   private FormEditText et_phone;
 
 
@@ -67,10 +71,12 @@ public class CustomerSettingFragment extends Fragment {
         inputMethodManager =
                 (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
 
-        /*
-        * initialize all resouces
-        * */
+
         initResources(view);
+        /*
+        * initialize all resources
+        * */
+
 
        /*
         * Set text field listeners*/
@@ -115,6 +121,7 @@ public class CustomerSettingFragment extends Fragment {
                 // EditText are going to appear with an exclamation mark and an explicative message.
             }
         }*/
+
     private void initResources(View view) {
 
         _mFirstName = (EditText) view.findViewById(R.id.first_name);
@@ -127,6 +134,8 @@ public class CustomerSettingFragment extends Fragment {
         _mAddress2 = (EditText) view.findViewById(R.id.street);
         _mBalance = (EditText) view.findViewById(R.id.balance);
         _autocomplete_city_area = (AutoCompleteTextView) view.findViewById(R.id.autocomplete_city_area);
+        _autocomplete_city_area.setFocusable(false);
+        _autocomplete_city_area.setFocusableInTouchMode(false);
         _mSave = (Button) view.findViewById(R.id.save);
         _mCancel = (Button) view.findViewById(R.id.cancel);
         _mEdit = (FloatingActionButton) view.findViewById(R.id.editFab);
@@ -141,6 +150,8 @@ public class CustomerSettingFragment extends Fragment {
         milk_quantity_layout = (TextInputLayout) view.findViewById(R.id.milk_quantity_layout);
         rate_layout = (TextInputLayout) view.findViewById(R.id.rate_layout);
         _dbHelper = AppUtil.getInstance().getDatabaseHandler();
+        _deliverDateLayout = (LinearLayout) view.findViewById(R.id.deliverDateLayout);
+        _deliverDateLayout.setVisibility(View.GONE);
 
         /*Set defaul rate
         * */
@@ -160,7 +171,13 @@ public class CustomerSettingFragment extends Fragment {
         _mAddress1.setText(getActivity().getIntent().getStringExtra("address1"));
         _mRate.setText(getActivity().getIntent().getStringExtra("defaultrate"));
         _autocomplete_city_area.setText(AreaMapTableManagement.getAreaNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("areaId")) + " " + AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("cityId")));
-        areaList = AreaMapTableManagement.getAreaById(_dbHelper.getReadableDatabase(), Constants.ACCOUNT_ID);
+        previousSelectedArea = AreaMapTableManagement.getAreaNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("areaId")) + " " + AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), getActivity().getIntent().getStringExtra("cityId"));
+
+//        areaList = AreaMapTableManagement.getAreaById(_dbHelper.getReadableDatabase(), Constants.ACCOUNT_ID);
+        ArrayList<String> areas = AccountAreaMapping.getArea(_dbHelper.getReadableDatabase());
+        for (int i = 0; i < areas.size(); ++i) {
+            areaList.add(AreaMapTableManagement.getAreabyAreaId(_dbHelper.getReadableDatabase(), areas.get(i)));
+        }
         autoCompleteData = new String[areaList.size()];
 //        for (int i = 0; i < areaList.size(); i++) {
 //            // Get City for area
@@ -177,13 +194,11 @@ public class CustomerSettingFragment extends Fragment {
             areacity.setCity(AreaMapTableManagement.getCityNameById(_dbHelper.getReadableDatabase(), areaList.get(i).getCityId()));
             areacity.setCityArea(areacity.getArea() + areacity.getCity());
             _areacityList.add(areacity);
-
-
         }
 
         AreaCityAdapter adapter1 = new AreaCityAdapter(getActivity(), 0, R.id.te1, _areacityList);
         _autocomplete_city_area.setAdapter(adapter1);
-
+        _autocomplete_city_area.setSelection(_autocomplete_city_area.getText().length());
         // final ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_dropdown_item_1line, autoCompleteData);
 
      /*   _autocomplete_city_area.addTextChangedListener(new TextWatcher() {
@@ -220,8 +235,13 @@ public class CustomerSettingFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 _autocomplete_city_area.setText(_areacityList.get(position).getArea() + ", " + _areacityList.get(position).getCity());
+
+                //  _autocomplete_city_area.append(_areacityList.get(position).getArea() + ", " + _areacityList.get(position).getCity());
                 selectedAreaId = _areacityList.get(position).getAreaId();
                 selectedCityId = _areacityList.get(position).getCityId();
+                tempAreaId = _areacityList.get(position).getAreaId();
+                tempCityId = _areacityList.get(position).getCityId();
+                _autocomplete_city_area.setSelection(_autocomplete_city_area.getText().length());
                 // int selection = parent.getSelectedItemPosition();
 
              /*   for (int i = 0; i < areaList.size(); i++) {
@@ -256,7 +276,8 @@ public class CustomerSettingFragment extends Fragment {
                 _mBottomLayout.setVisibility(View.GONE);
 
                 disableKeyBoard();
-
+                _autocomplete_city_area.setFocusable(false);
+                _autocomplete_city_area.setFocusableInTouchMode(false);
                 //Clear focus from first field
                 _mFirstName.clearFocus();
                 _mLastName.clearFocus();
@@ -278,18 +299,40 @@ public class CustomerSettingFragment extends Fragment {
                 inputMethodManager.showSoftInput(_mFirstName, InputMethodManager.SHOW_IMPLICIT);
                 _mBottomLayout.setVisibility(View.VISIBLE);
                 _mEdit.setVisibility(View.GONE);
+                _autocomplete_city_area.setFocusable(true);
+                _autocomplete_city_area.setFocusableInTouchMode(true);
                 _autocomplete_city_area.setEnabled(true);
                 _mFirstName.setSelection(_mFirstName.getText().length());
                 EnableEditableFields.setIsEnabled(true);
             }
         });
+        final TextInputLayout autocomplete_layout = (TextInputLayout) view.findViewById(R.id.autocomplete_layout);
         /*
-* Save button onclick Event
-* */
+        * Save button onclick Event
+        * */
         _mSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!_mFirstName.getText().toString().equals("")
+                if (_mFirstName.getText().toString().equals(""))
+                    name_layout.setError("Enter name!");
+                else if (_mLastName.getText().toString().equals(""))
+                    last_name_layout.setError("Enter name!");
+                else if (_mRate.getText().toString().equals(""))
+                    rate_layout.setError("Enter amount!");
+                else if (_mBalance.getText().toString().equals(""))
+                    balance_layout.setError("Enter balance amount");
+                else if (_mAddress1.getText().toString().equals(""))
+                    flat_number_layout.setError("Enter flat number!");
+                else if (_mAddress2.getText().toString().equals(""))
+                    street_layout.setError("Enter street !");
+                else if (!previousSelectedArea.equals(_autocomplete_city_area.getText().toString())) {
+                    if (tempCityId.equals("") && tempAreaId.equals(""))
+                        autocomplete_layout.setError("Select valid area!");
+                } else if (_mMobile.getText().toString().equals(""))
+                    _phone_textinput_layout.setError("Enter mobile number!");
+                else if (_mQuantuty.getText().toString().equals(""))
+                    milk_quantity_layout.setError("Enter milk quantity!");
+                else if (!_mFirstName.getText().toString().equals("")
                         && !_mLastName.getText().toString().equals("") &&
                         !_mBalance.getText().toString().equals("") &&
                         !_mAddress1.getText().toString().equals("")
@@ -298,7 +341,7 @@ public class CustomerSettingFragment extends Fragment {
                         && !selectedCityId.equals("") && !selectedAreaId.equals("")
                         && !_mMobile.getText().toString().equals("") &&
                         !_mQuantuty.getText().toString().equals("")
-                ) {
+                        ) {
 
 
                     VCustomersList holder = new VCustomersList();
@@ -311,12 +354,29 @@ public class CustomerSettingFragment extends Fragment {
                     holder.setAreaId(selectedAreaId);
                     holder.setMobile(_mMobile.getText().toString());
                     holder.setQuantity(_mQuantuty.getText().toString());
+                    holder.setCustomerId(getActivity().getIntent().getStringExtra("cust_id"));
                     holder.setAccountId(Constants.ACCOUNT_ID);
                     holder.setRate(_mRate.getText().toString());
                     holder.setDateAdded(getActivity().getIntent().getStringExtra("added_date"));
-                    holder.setDateModified(String.valueOf(System.currentTimeMillis()));
-                    holder.setCustomerId(Constants.ACCOUNT_ID + String.valueOf(System.currentTimeMillis()));
+                    holder.setDeliverydate(getActivity().getIntent().getStringExtra("delivery_date"));
+                    Calendar c = Calendar.getInstance();
+                    SimpleDateFormat df = Constants.format;
+                    String formattedDate = df.format(c.getTime());
+                    holder.setDateModified(formattedDate);
+                    holder.setStart_date(formattedDate);
+                    holder.setEnd_date("0");
                     CustomersTableMagagement.updateCustomerDetail(_dbHelper.getWritableDatabase(), holder, getActivity().getIntent().getStringExtra("cust_id"));
+
+                    if (CustomerSettingTableManagement.isHasStartDate(_dbHelper.getReadableDatabase(),
+                            getActivity().getIntent().getStringExtra("cust_id"), formattedDate)) {
+                        CustomerSettingTableManagement.updateData(_dbHelper.getWritableDatabase(), holder);
+
+                    } else {
+                        CustomerSettingTableManagement.updateQuantity(_dbHelper.getWritableDatabase(), holder);
+                        CustomerSettingTableManagement.insertCustomersSetting(_dbHelper.getWritableDatabase(), holder);
+
+
+                    }
                     Toast.makeText(getActivity(), "Customer edited successfully !", Toast.LENGTH_SHORT).show();
                     EnableEditableFields.setIsEnabled(false);
                     getActivity().finish();
